@@ -248,7 +248,7 @@ public:
             case PHASE_GROUND:
                 me->CastStop(SPELL_FOG_BREATH);
                 me->RemoveAurasDueToSpell(SPELL_FOG_BREATH);
-                me->SetUnitMovementFlags(MOVEMENTFLAG_NONE);
+                me->StopMoving();
                 me->SetSpeed(MOVE_RUN, 2.0f);
 
                 events.ScheduleEvent(EVENT_CLEAVE, urand(5000, 10000));
@@ -258,7 +258,7 @@ public:
                 events.ScheduleEvent(EVENT_FLIGHT, 60000);
                 break;
             case PHASE_FLIGHT:
-                me->SetUnitMovementFlags(MOVEMENTFLAG_DISABLE_GRAVITY);
+                me->SetDisableGravity(true);
                 events.ScheduleEvent(EVENT_FLIGHT_SEQUENCE, 1000);
                 uiFlightCount = 0;
                 uiBreathCount = 0;
@@ -428,11 +428,11 @@ public:
                         events.ScheduleEvent(EVENT_BERSERK, 10000);
                         break;
                     case EVENT_CLEAVE:
-                        DoCast(me->getVictim(), SPELL_CLEAVE, false);
+                        DoCastVictim(SPELL_CLEAVE, false);
                         events.ScheduleEvent(EVENT_CLEAVE, urand(5000, 10000));
                         break;
                     case EVENT_CORROSION:
-                        DoCast(me->getVictim(), SPELL_CORROSION, false);
+                        DoCastVictim(SPELL_CORROSION, false);
                         events.ScheduleEvent(EVENT_CORROSION, urand(20000, 30000));
                         break;
                     case EVENT_GAS_NOVA:
@@ -538,7 +538,7 @@ public:
         }
         void UpdateAI(uint32 /*diff*/)
         {
-            if (!me->getVictim())
+            if (!me->GetVictim())
                 if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 100, true))
                     AttackStart(target);
         }

@@ -93,31 +93,31 @@ public:
                 switch (eventId)
                 {
                     case EVENT_WARSTOMP:
-                        DoCast(me->getVictim(), SPELL_WARSTOMP);
+                        DoCastVictim(SPELL_WARSTOMP);
                         events.ScheduleEvent(EVENT_WARSTOMP, 14 * IN_MILLISECONDS);
                         break;
                     case EVENT_CLEAVE:
-                        DoCast(me->getVictim(), SPELL_CLEAVE);
+                        DoCastVictim(SPELL_CLEAVE);
                         events.ScheduleEvent(EVENT_CLEAVE, 8 * IN_MILLISECONDS);
                         break;
                     case EVENT_STRIKE:
-                        DoCast(me->getVictim(), SPELL_STRIKE);
+                        DoCastVictim(SPELL_STRIKE);
                         events.ScheduleEvent(EVENT_STRIKE, 10 * IN_MILLISECONDS);
                         break;
                     case EVENT_REND:
-                        DoCast(me->getVictim(), SPELL_REND);
+                        DoCastVictim(SPELL_REND);
                         events.ScheduleEvent(EVENT_REND, 18 * IN_MILLISECONDS);
                         break;
                     case EVENT_SUNDER_ARMOR:
-                        DoCast(me->getVictim(), SPELL_SUNDERARMOR);
+                        DoCastVictim(SPELL_SUNDERARMOR);
                         events.ScheduleEvent(EVENT_SUNDER_ARMOR, 25 * IN_MILLISECONDS);
                         break;
                     case EVENT_KNOCK_AWAY:
-                        DoCast(me->getVictim(), SPELL_KNOCKAWAY);
+                        DoCastVictim(SPELL_KNOCKAWAY);
                         events.ScheduleEvent(EVENT_KNOCK_AWAY, 12 * IN_MILLISECONDS);
                         break;
                     case EVENT_SLOW:
-                        DoCast(me->getVictim(), SPELL_SLOW);
+                        DoCastVictim(SPELL_SLOW);
                         events.ScheduleEvent(EVENT_SLOW, 18 * IN_MILLISECONDS);
                         break;
                 }
