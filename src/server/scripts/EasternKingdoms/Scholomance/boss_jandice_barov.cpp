@@ -26,11 +26,14 @@ EndScriptData */
 #include "ScriptMgr.h"
 #include "ScriptedCreature.h"
 
-#define SPELL_CURSEOFBLOOD          24673
-//#define SPELL_ILLUSION              17773
+enum Spells
+{
+    SPELL_CURSEOFBLOOD          = 24673,
+    //SPELL_ILLUSION              = 17773,
 
-//Spells of Illusion of Jandice Barov
-#define SPELL_CLEAVE                15584
+    // Spells of Illusion of Jandice Barov
+    SPELL_CLEAVE                = 15584
+};
 
 class boss_jandice_barov : public CreatureScript
 {
@@ -154,19 +157,19 @@ public:
 
 // Illusion of Jandice Barov Script
 
-class mob_illusionofjandicebarov : public CreatureScript
+class npc_illusionofjandicebarov : public CreatureScript
 {
 public:
-    mob_illusionofjandicebarov() : CreatureScript("mob_illusionofjandicebarov") { }
+    npc_illusionofjandicebarov() : CreatureScript("npc_illusionofjandicebarov") { }
 
     CreatureAI* GetAI(Creature* creature) const
     {
-        return new mob_illusionofjandicebarovAI (creature);
+        return new npc_illusionofjandicebarovAI (creature);
     }
 
-    struct mob_illusionofjandicebarovAI : public ScriptedAI
+    struct npc_illusionofjandicebarovAI : public ScriptedAI
     {
-        mob_illusionofjandicebarovAI(Creature* creature) : ScriptedAI(creature) {}
+        npc_illusionofjandicebarovAI(Creature* creature) : ScriptedAI(creature) {}
 
         uint32 Cleave_Timer;
 
@@ -205,5 +208,5 @@ public:
 void AddSC_boss_jandicebarov()
 {
     new boss_jandice_barov();
-    new mob_illusionofjandicebarov();
+    new npc_illusionofjandicebarov();
 }

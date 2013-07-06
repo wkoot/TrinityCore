@@ -36,9 +36,9 @@ enum Spells
 
 enum Creatures
 {
-    MOB_FIRE_MAGUS                                = 26928,
-    MOB_FROST_MAGUS                               = 26930,
-    MOB_ARCANE_MAGUS                              = 26929
+    NPC_FIRE_MAGUS                                = 26928,
+    NPC_FROST_MAGUS                               = 26930,
+    NPC_ARCANE_MAGUS                              = 26929
 };
 
 enum Yells
@@ -50,8 +50,11 @@ enum Yells
     SAY_SPLIT                                     = 4
 };
 
-#define ACTION_MAGUS_DEAD                         1
-#define DATA_SPLIT_PERSONALITY                    2
+enum Misc
+{
+    ACTION_MAGUS_DEAD                             = 1,
+    DATA_SPLIT_PERSONALITY                        = 2
+};
 
 const Position  CenterOfRoom = {504.80f, 89.07f, -16.12f, 6.27f};
 
@@ -168,17 +171,17 @@ public:
             {
                 switch (entry)
                 {
-                    case MOB_FIRE_MAGUS:
+                    case NPC_FIRE_MAGUS:
                     {
                         Summoned->CastSpell(Summoned, SPELL_FIRE_MAGUS_VISUAL, false);
                         break;
                     }
-                    case MOB_FROST_MAGUS:
+                    case NPC_FROST_MAGUS:
                     {
                         Summoned->CastSpell(Summoned, SPELL_FROST_MAGUS_VISUAL, false);
                         break;
                     }
-                    case MOB_ARCANE_MAGUS:
+                    case NPC_ARCANE_MAGUS:
                     {
                         Summoned->CastSpell(Summoned, SPELL_ARCANE_MAGUS_VISUAL, false);
                         break;
@@ -263,9 +266,9 @@ public:
                 me->RemoveAllAuras();
                 me->SetVisible(false);
                 me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-                uiFireMagusGUID = SplitPersonality(MOB_FIRE_MAGUS);
-                uiFrostMagusGUID = SplitPersonality(MOB_FROST_MAGUS);
-                uiArcaneMagusGUID = SplitPersonality(MOB_ARCANE_MAGUS);
+                uiFireMagusGUID = SplitPersonality(NPC_FIRE_MAGUS);
+                uiFrostMagusGUID = SplitPersonality(NPC_FROST_MAGUS);
+                uiArcaneMagusGUID = SplitPersonality(NPC_ARCANE_MAGUS);
                 bFireMagusDead = false;
                 bFrostMagusDead = false;
                 bArcaneMagusDead = false;
@@ -280,9 +283,9 @@ public:
                 me->RemoveAllAuras();
                 me->SetVisible(false);
                 me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-                uiFireMagusGUID = SplitPersonality(MOB_FIRE_MAGUS);
-                uiFrostMagusGUID = SplitPersonality(MOB_FROST_MAGUS);
-                uiArcaneMagusGUID = SplitPersonality(MOB_ARCANE_MAGUS);
+                uiFireMagusGUID = SplitPersonality(NPC_FIRE_MAGUS);
+                uiFrostMagusGUID = SplitPersonality(NPC_FROST_MAGUS);
+                uiArcaneMagusGUID = SplitPersonality(NPC_ARCANE_MAGUS);
                 bFireMagusDead = false;
                 bFrostMagusDead = false;
                 bArcaneMagusDead = false;

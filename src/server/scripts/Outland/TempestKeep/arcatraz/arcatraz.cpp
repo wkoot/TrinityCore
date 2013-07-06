@@ -26,7 +26,7 @@ EndScriptData */
 /* ContentData
 npc_millhouse_manastorm
 npc_warden_mellichar
-mob_zerekethvoidzone
+npc_zerekethvoidzone
 EndContentData */
 
 #include "ScriptMgr.h"
@@ -37,7 +37,7 @@ EndContentData */
 # npc_millhouse_manastorm
 #####*/
 
-enum eMillhouseSays
+enum MillhouseSays
 {
     SAY_INTRO_1                = 0,
     SAY_INTRO_2                = 1,
@@ -53,7 +53,7 @@ enum eMillhouseSays
     SAY_COMPLETE               = 11,
 };
 
-enum eMillhouseSpells
+enum MillhouseSpells
 {
     SPELL_CONJURE_WATER        = 36879,
     SPELL_ARCANE_INTELLECT     = 36880,
@@ -230,7 +230,7 @@ class npc_millhouse_manastorm : public CreatureScript
 # npc_warden_mellichar
 #####*/
 
-enum eWardenSays
+enum WardenSays
 {
     YELL_INTRO1         = 0,
     YELL_INTRO2         = 1,
@@ -242,7 +242,7 @@ enum eWardenSays
     YELL_WELCOME        = 7,
 };
 
-enum eWardenUnits
+enum WardenUnits
 {
     //phase 2(acid mobs)
     ENTRY_TRICKSTER    = 20905,
@@ -259,7 +259,7 @@ enum eWardenUnits
     ENTRY_SKYRISS      = 20912,
 };
 
-enum eWardenSpells
+enum WardenSpells
 {
     //TARGET_SCRIPT
     SPELL_TARGET_ALPHA  = 36856,
@@ -521,7 +521,7 @@ class npc_warden_mellichar : public CreatureScript
 };
 
 /*#####
-# mob_zerekethvoidzone (this script probably not needed in future -> `creature_template_addon`.`auras`='36120 0')
+# npc_zerekethvoidzone (this script probably not needed in future -> `creature_template_addon`.`auras`='36120 0')
 #####*/
 
 enum ZerekethSpell
@@ -529,16 +529,16 @@ enum ZerekethSpell
     SPELL_VOID_ZONE_DAMAGE = 36120,
 };
 
-class mob_zerekethvoidzone : public CreatureScript
+class npc_zerekethvoidzone : public CreatureScript
 {
     public:
 
-        mob_zerekethvoidzone() : CreatureScript("mob_zerekethvoidzone")
+        npc_zerekethvoidzone() : CreatureScript("npc_zerekethvoidzone")
         {
         }
-        struct mob_zerekethvoidzoneAI : public ScriptedAI
+        struct npc_zerekethvoidzoneAI : public ScriptedAI
         {
-            mob_zerekethvoidzoneAI(Creature* creature) : ScriptedAI(creature) {}
+            npc_zerekethvoidzoneAI(Creature* creature) : ScriptedAI(creature) {}
 
             void Reset()
             {
@@ -554,7 +554,7 @@ class mob_zerekethvoidzone : public CreatureScript
 
         CreatureAI* GetAI(Creature* creature) const
         {
-            return new mob_zerekethvoidzoneAI(creature);
+            return new npc_zerekethvoidzoneAI(creature);
         }
 };
 
@@ -562,5 +562,5 @@ void AddSC_arcatraz()
 {
     new npc_millhouse_manastorm();
     new npc_warden_mellichar();
-    new mob_zerekethvoidzone();
+    new npc_zerekethvoidzone();
 }

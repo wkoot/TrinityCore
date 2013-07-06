@@ -29,30 +29,36 @@ EndScriptData */
 #include "Spell.h"
 #include "Player.h"
 
-#define SPELL_SPOUT         37433
-#define SPELL_SPOUT_ANIM    42835
-#define SPELL_SPOUT_BREATH  37431
-#define SPELL_KNOCKBACK     19813
-#define SPELL_GEYSER        37478
-#define SPELL_WHIRL         37660
-#define SPELL_WATERBOLT     37138
-#define SPELL_SUBMERGE      37550
-#define SPELL_EMERGE        20568
+enum Spells
+{
+    SPELL_SPOUT             = 37433,
+    SPELL_SPOUT_ANIM        = 42835,
+    SPELL_SPOUT_BREATH      = 37431,
+    SPELL_KNOCKBACK         = 19813,
+    SPELL_GEYSER            = 37478,
+    SPELL_WHIRL             = 37660,
+    SPELL_WATERBOLT         = 37138,
+    SPELL_SUBMERGE          = 37550,
+    SPELL_EMERGE            = 20568,
+
+
+    // Ambusher spells
+    SPELL_SPREAD_SHOT       = 37790,
+    SPELL_SHOOT             = 37770,
+    // Guardian spells
+    SPELL_ARCINGSMASH       = 38761, // Wrong SpellId. Can't find the right one.
+    SPELL_HAMSTRING         = 26211
+};
+
+enum Creatures
+{
+    NPC_COILFANG_GUARDIAN   = 21873,
+    NPC_COILFANG_AMBUSHER   = 21865
+};
 
 #define EMOTE_SPOUT "The Lurker Below takes a deep breath."
 
 #define SPOUT_DIST  100
-
-#define MOB_COILFANG_GUARDIAN 21873
-#define MOB_COILFANG_AMBUSHER 21865
-
-//Ambusher spells
-#define SPELL_SPREAD_SHOT   37790
-#define SPELL_SHOOT         37770
-
-//Guardian spells
-#define SPELL_ARCINGSMASH   38761 // Wrong SpellId. Can't find the right one.
-#define SPELL_HAMSTRING     26211
 
 float AddPos[9][3] =
 {
@@ -350,7 +356,7 @@ public:
                     me->SetUInt32Value(UNIT_FIELD_FLAGS, UNIT_FLAG_IMMUNE_TO_PC);
                     // spawn adds
                     for (uint8 i = 0; i < 9; ++i)
-                        if (Creature* summoned = me->SummonCreature(i < 6 ? MOB_COILFANG_AMBUSHER : MOB_COILFANG_GUARDIAN, AddPos[i][0], AddPos[i][1], AddPos[i][2], 0, TEMPSUMMON_CORPSE_DESPAWN, 0))
+                        if (Creature* summoned = me->SummonCreature(i < 6 ? NPC_COILFANG_AMBUSHER : NPC_COILFANG_GUARDIAN, AddPos[i][0], AddPos[i][1], AddPos[i][2], 0, TEMPSUMMON_CORPSE_DESPAWN, 0))
                             Summons.Summon(summoned);
                     Spawned = true;
                 }
@@ -359,19 +365,19 @@ public:
      };
 };
 
-class mob_coilfang_ambusher : public CreatureScript
+class npc_coilfang_ambusher : public CreatureScript
 {
 public:
-    mob_coilfang_ambusher() : CreatureScript("mob_coilfang_ambusher") { }
+    npc_coilfang_ambusher() : CreatureScript("npc_coilfang_ambusher") { }
 
     CreatureAI* GetAI(Creature* creature) const
     {
-        return new mob_coilfang_ambusherAI (creature);
+        return new npc_coilfang_ambusherAI (creature);
     }
 
-    struct mob_coilfang_ambusherAI : public ScriptedAI
+    struct npc_coilfang_ambusherAI : public ScriptedAI
     {
-        mob_coilfang_ambusherAI(Creature* creature) : ScriptedAI(creature)
+        npc_coilfang_ambusherAI(Creature* creature) : ScriptedAI(creature)
         {
             SetCombatMovement(false);
         }
@@ -444,6 +450,6 @@ class go_strange_pool : public GameObjectScript
 void AddSC_boss_the_lurker_below()
 {
     new boss_the_lurker_below();
-    new mob_coilfang_ambusher();
+    new npc_coilfang_ambusher();
     new go_strange_pool();
 }

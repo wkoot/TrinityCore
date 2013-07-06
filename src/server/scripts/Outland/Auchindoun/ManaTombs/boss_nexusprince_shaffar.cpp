@@ -25,20 +25,23 @@ EndScriptData */
 
 /* ContentData
 boss_nexusprince_shaffar
-mob_ethereal_beacon
+npc_ethereal_beacon
 EndContentData */
 
 #include "ScriptMgr.h"
 #include "ScriptedCreature.h"
 
-enum ePrince
+enum Yells
 {
     SAY_INTRO                       = 0,
     SAY_AGGRO                       = 1,
     SAY_SLAY                        = 2,
     SAY_SUMMON                      = 3,
     SAY_DEAD                        = 4,
+};
 
+enum Spells
+{
     SPELL_BLINK                     = 34605,
     SPELL_FROSTBOLT                 = 32364,
     SPELL_FIREBALL                  = 32363,
@@ -47,9 +50,19 @@ enum ePrince
     SPELL_ETHEREAL_BEACON           = 32371,                // Summons NPC_BEACON
     SPELL_ETHEREAL_BEACON_VISUAL    = 32368,
 
-    NPC_BEACON                      = 18431,
-    NPC_SHAFFAR                     = 18344,
+    // Ethereal Beacon
+    SPELL_ARCANE_BOLT               = 15254,
+    SPELL_ETHEREAL_APPRENTICE       = 32372                 // Summon 18430
+};
 
+enum Creatures
+{
+    NPC_BEACON                      = 18431,
+    NPC_SHAFFAR                     = 18344
+};
+
+enum Misc
+{
     NR_INITIAL_BEACONS              = 3
 };
 
@@ -213,25 +226,19 @@ public:
 
 };
 
-enum eEnums
-{
-    SPELL_ARCANE_BOLT               = 15254,
-    SPELL_ETHEREAL_APPRENTICE       = 32372                 // Summon 18430
-};
-
-class mob_ethereal_beacon : public CreatureScript
+class npc_ethereal_beacon : public CreatureScript
 {
 public:
-    mob_ethereal_beacon() : CreatureScript("mob_ethereal_beacon") { }
+    npc_ethereal_beacon() : CreatureScript("npc_ethereal_beacon") { }
 
     CreatureAI* GetAI(Creature* creature) const
     {
-        return new mob_ethereal_beaconAI (creature);
+        return new npc_ethereal_beaconAI (creature);
     }
 
-    struct mob_ethereal_beaconAI : public ScriptedAI
+    struct npc_ethereal_beaconAI : public ScriptedAI
     {
-        mob_ethereal_beaconAI(Creature* creature) : ScriptedAI(creature)
+        npc_ethereal_beaconAI(Creature* creature) : ScriptedAI(creature)
         {
         }
 
@@ -305,25 +312,25 @@ public:
 
 };
 
-enum eEthereal
+enum Ethereal
 {
     SPELL_ETHEREAL_APPRENTICE_FIREBOLT          = 32369,
     SPELL_ETHEREAL_APPRENTICE_FROSTBOLT         = 32370
 };
 
-class mob_ethereal_apprentice : public CreatureScript
+class npc_ethereal_apprentice : public CreatureScript
 {
 public:
-    mob_ethereal_apprentice() : CreatureScript("mob_ethereal_apprentice") { }
+    npc_ethereal_apprentice() : CreatureScript("npc_ethereal_apprentice") { }
 
     CreatureAI* GetAI(Creature* creature) const
     {
-        return new mob_ethereal_apprenticeAI (creature);
+        return new npc_ethereal_apprenticeAI (creature);
     }
 
-    struct mob_ethereal_apprenticeAI : public ScriptedAI
+    struct npc_ethereal_apprenticeAI : public ScriptedAI
     {
-        mob_ethereal_apprenticeAI(Creature* creature) : ScriptedAI(creature) {}
+        npc_ethereal_apprenticeAI(Creature* creature) : ScriptedAI(creature) {}
 
         uint32 Cast_Timer;
 
@@ -360,6 +367,6 @@ public:
 void AddSC_boss_nexusprince_shaffar()
 {
     new boss_nexusprince_shaffar();
-    new mob_ethereal_beacon();
-    new mob_ethereal_apprentice();
+    new npc_ethereal_beacon();
+    new npc_ethereal_apprentice();
 }

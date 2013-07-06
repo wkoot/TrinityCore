@@ -17,7 +17,7 @@
  */
 
 /* ScriptData
-SDName: mob_anubisath_sentinel
+SDName: npc_anubisath_sentinel
 SD%Complete: 95
 SDComment: Shadow storm is not properly implemented in core it should only target ppl outside of melee range.
 SDCategory: Temple of Ahn'Qiraj
@@ -36,30 +36,33 @@ EndScriptData */
 #include "GridNotifiers.h"
 #include "GridNotifiersImpl.h"
 
-#define SPELL_MENDING_BUFF      2147
+enum Spells
+{
+    SPELL_MENDING_BUFF     = 2147,
 
-#define SPELL_KNOCK_BUFF        21737
-#define SPELL_KNOCK             25778
-#define SPELL_MANAB_BUFF        812
-#define SPELL_MANAB             25779
+    SPELL_KNOCK_BUFF       = 21737,
+    SPELL_KNOCK            = 25778,
+    SPELL_MANAB_BUFF       = 812,
+    SPELL_MANAB            = 25779,
 
-#define SPELL_REFLECTAF_BUFF    13022
-#define SPELL_REFLECTSFr_BUFF   19595
-#define SPELL_THORNS_BUFF       25777
+    SPELL_REFLECTAF_BUFF   = 13022,
+    SPELL_REFLECTSFr_BUFF  = 19595,
+    SPELL_THORNS_BUFF      = 25777,
 
-#define SPELL_THUNDER_BUFF      2834
-#define SPELL_THUNDER           8732
+    SPELL_THUNDER_BUFF     = 2834,
+    SPELL_THUNDER          = 8732,
 
-#define SPELL_MSTRIKE_BUFF      9347
-#define SPELL_MSTRIKE           24573
+    SPELL_MSTRIKE_BUFF     = 9347,
+    SPELL_MSTRIKE          = 24573,
 
-#define SPELL_STORM_BUFF        2148
-#define SPELL_STORM             26546
+    SPELL_STORM_BUFF       = 2148,
+    SPELL_STORM            = 26546
+};
 
-class mob_anubisath_sentinel : public CreatureScript
+class npc_anubisath_sentinel : public CreatureScript
 {
 public:
-    mob_anubisath_sentinel() : CreatureScript("mob_anubisath_sentinel") { }
+    npc_anubisath_sentinel() : CreatureScript("npc_anubisath_sentinel") { }
 
     CreatureAI* GetAI(Creature* creature) const
     {
@@ -259,7 +262,7 @@ public:
     };
 };
 
-void AddSC_mob_anubisath_sentinel()
+void AddSC_npc_anubisath_sentinel()
 {
-    new mob_anubisath_sentinel();
+    new npc_anubisath_sentinel();
 }

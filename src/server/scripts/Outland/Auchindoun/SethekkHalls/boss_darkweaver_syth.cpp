@@ -43,13 +43,13 @@ enum DarkweaverSyth
     SPELL_SUMMON_SYTH_FIRE      = 33537,                   // Spawns 19203
     SPELL_SUMMON_SYTH_ARCANE    = 33538,                   // Spawns 19205
     SPELL_SUMMON_SYTH_FROST     = 33539,                   // Spawns 19204
-    SPELL_SUMMON_SYTH_SHADOW    = 33540                    // Spawns 19206
-};
+    SPELL_SUMMON_SYTH_SHADOW    = 33540,                   // Spawns 19206
 
-#define SPELL_FLAME_BUFFET          DUNGEON_MODE(33526, 38141)
-#define SPELL_ARCANE_BUFFET         DUNGEON_MODE(33527, 38138)
-#define SPELL_FROST_BUFFET          DUNGEON_MODE(33528, 38142)
-#define SPELL_SHADOW_BUFFET         DUNGEON_MODE(33529, 38143)
+    SPELL_FLAME_BUFFET          = 33526,
+    SPELL_ARCANE_BUFFET         = 33527,
+    SPELL_FROST_BUFFET          = 33528,
+    SPELL_SHADOW_BUFFET         = 33529
+};
 
 class boss_darkweaver_syth : public CreatureScript
 {
@@ -197,14 +197,14 @@ public:
 };
 
 /* ELEMENTALS */
-class mob_syth_fire : public CreatureScript
+class npc_syth_fire : public CreatureScript
 {
 public:
-    mob_syth_fire() : CreatureScript("mob_syth_fire") { }
+    npc_syth_fire() : CreatureScript("npc_syth_fire") { }
 
-    struct mob_syth_fireAI : public ScriptedAI
+    struct npc_syth_fireAI : public ScriptedAI
     {
-        mob_syth_fireAI(Creature* creature) : ScriptedAI(creature)
+        npc_syth_fireAI(Creature* creature) : ScriptedAI(creature)
         {
         }
 
@@ -247,23 +247,23 @@ public:
 
     CreatureAI* GetAI(Creature* creature) const
     {
-        return new mob_syth_fireAI (creature);
+        return new npc_syth_fireAI (creature);
     }
 };
 
-class mob_syth_arcane : public CreatureScript
+class npc_syth_arcane : public CreatureScript
 {
 public:
-    mob_syth_arcane() : CreatureScript("mob_syth_arcane") { }
+    npc_syth_arcane() : CreatureScript("npc_syth_arcane") { }
 
     CreatureAI* GetAI(Creature* creature) const
     {
-        return new mob_syth_arcaneAI (creature);
+        return new npc_syth_arcaneAI (creature);
     }
 
-    struct mob_syth_arcaneAI : public ScriptedAI
+    struct npc_syth_arcaneAI : public ScriptedAI
     {
-        mob_syth_arcaneAI(Creature* creature) : ScriptedAI(creature)
+        npc_syth_arcaneAI(Creature* creature) : ScriptedAI(creature)
         {
         }
 
@@ -305,19 +305,19 @@ public:
     };
 };
 
-class mob_syth_frost : public CreatureScript
+class npc_syth_frost : public CreatureScript
 {
 public:
-    mob_syth_frost() : CreatureScript("mob_syth_frost") { }
+    npc_syth_frost() : CreatureScript("npc_syth_frost") { }
 
     CreatureAI* GetAI(Creature* creature) const
     {
-        return new mob_syth_frostAI (creature);
+        return new npc_syth_frostAI (creature);
     }
 
-    struct mob_syth_frostAI : public ScriptedAI
+    struct npc_syth_frostAI : public ScriptedAI
     {
-        mob_syth_frostAI(Creature* creature) : ScriptedAI(creature)
+        npc_syth_frostAI(Creature* creature) : ScriptedAI(creature)
         {
         }
 
@@ -360,19 +360,19 @@ public:
 
 };
 
-class mob_syth_shadow : public CreatureScript
+class npc_syth_shadow : public CreatureScript
 {
 public:
-    mob_syth_shadow() : CreatureScript("mob_syth_shadow") { }
+    npc_syth_shadow() : CreatureScript("npc_syth_shadow") { }
 
     CreatureAI* GetAI(Creature* creature) const
     {
-        return new mob_syth_shadowAI (creature);
+        return new npc_syth_shadowAI (creature);
     }
 
-    struct mob_syth_shadowAI : public ScriptedAI
+    struct npc_syth_shadowAI : public ScriptedAI
     {
-        mob_syth_shadowAI(Creature* creature) : ScriptedAI(creature)
+        npc_syth_shadowAI(Creature* creature) : ScriptedAI(creature)
         {
         }
 
@@ -418,8 +418,8 @@ public:
 void AddSC_boss_darkweaver_syth()
 {
     new boss_darkweaver_syth();
-    new mob_syth_fire();
-    new mob_syth_arcane();
-    new mob_syth_frost();
-    new mob_syth_shadow();
+    new npc_syth_fire();
+    new npc_syth_arcane();
+    new npc_syth_frost();
+    new npc_syth_shadow();
 }

@@ -21,7 +21,7 @@
 
 enum Spells
 {
-    SPELL_BLOODTHIRST                             = 55968, //Trigger Spell + add aura
+    SPELL_BLOODTHIRST                             = 55968, // Trigger Spell + add aura
     SPELL_CONJURE_FLAME_SPHERE                    = 55931,
     SPELL_FLAME_SPHERE_SUMMON_1                   = 55895, // 1x 30106
     H_SPELL_FLAME_SPHERE_SUMMON_1                 = 59511, // 1x 31686
@@ -40,14 +40,16 @@ enum Spells
     H_CREATURE_FLAME_SPHERE_2                     = 31687,
     SPELL_HOVER_FALL                              = 60425
 };
+
 enum Misc
 {
     DATA_EMBRACE_DMG                              = 20000,
     H_DATA_EMBRACE_DMG                            = 40000,
-    DATA_SPHERE_DISTANCE                          =    15
+    DATA_SPHERE_DISTANCE                          = 15
 };
-#define DATA_SPHERE_ANGLE_OFFSET            0.7f
-#define DATA_GROUND_POSITION_Z             11.30809f
+
+#define DATA_SPHERE_ANGLE_OFFSET                    0.7f
+#define DATA_GROUND_POSITION_Z                      11.30809f
 
 enum Yells
 {
@@ -334,14 +336,14 @@ public:
     }
 };
 
-class mob_taldaram_flamesphere : public CreatureScript
+class npc_taldaram_flamesphere : public CreatureScript
 {
 public:
-    mob_taldaram_flamesphere() : CreatureScript("mob_taldaram_flamesphere") { }
+    npc_taldaram_flamesphere() : CreatureScript("npc_taldaram_flamesphere") { }
 
-    struct mob_taldaram_flamesphereAI : public ScriptedAI
+    struct npc_taldaram_flamesphereAI : public ScriptedAI
     {
-        mob_taldaram_flamesphereAI(Creature* creature) : ScriptedAI(creature)
+        npc_taldaram_flamesphereAI(Creature* creature) : ScriptedAI(creature)
         {
             instance = creature->GetInstanceScript();
         }
@@ -381,7 +383,7 @@ public:
 
     CreatureAI* GetAI(Creature* creature) const
     {
-        return new mob_taldaram_flamesphereAI(creature);
+        return new npc_taldaram_flamesphereAI(creature);
     }
 };
 
@@ -425,6 +427,6 @@ public:
 void AddSC_boss_taldaram()
 {
     new boss_taldaram();
-    new mob_taldaram_flamesphere();
+    new npc_taldaram_flamesphere();
     new prince_taldaram_sphere();
 }

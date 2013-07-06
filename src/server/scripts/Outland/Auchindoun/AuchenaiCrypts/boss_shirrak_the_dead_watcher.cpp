@@ -27,22 +27,25 @@ EndScriptData */
 #include "ScriptedCreature.h"
 #include "Player.h"
 
-#define SPELL_INHIBITMAGIC          32264
-#define SPELL_ATTRACTMAGIC          32265
-#define N_SPELL_CARNIVOROUSBITE     36383
-#define H_SPELL_CARNIVOROUSBITE     39382
-#define SPELL_CARNIVOROUSBITE       DUNGEON_MODE(N_SPELL_CARNIVOROUSBITE, H_SPELL_CARNIVOROUSBITE)
+enum Spells
+{
+    SPELL_INHIBITMAGIC          = 32264,
+    SPELL_ATTRACTMAGIC          = 32265,
+    SPELL_CARNIVOROUSBITE       = 36383,
 
-#define ENTRY_FOCUS_FIRE            18374
+    SPELL_FIERY_BLAST           = 32302,
 
-#define N_SPELL_FIERY_BLAST         32302
-#define H_SPELL_FIERY_BLAST         38382
-#define SPELL_FIERY_BLAST           DUNGEON_MODE(N_SPELL_FIERY_BLAST, H_SPELL_FIERY_BLAST)
-#define SPELL_FOCUS_FIRE_VISUAL     42075 //need to find better visual
+    SPELL_FOCUS_FIRE_VISUAL     = 42075 //need to find better visual
+};
 
 enum Say
 {
-    EMOTE_FOCUSED                  = 0
+    EMOTE_FOCUSED               = 0
+};
+
+enum Creatures
+{
+    NPC_FOCUS_FIRE            = 18374
 };
 
 class boss_shirrak_the_dead_watcher : public CreatureScript
@@ -82,7 +85,7 @@ public:
 
         void JustSummoned(Creature* summoned)
         {
-            if (summoned && summoned->GetEntry() == ENTRY_FOCUS_FIRE)
+            if (summoned && summoned->GetEntry() == NPC_FOCUS_FIRE)
             {
                 summoned->CastSpell(summoned, SPELL_FOCUS_FIRE_VISUAL, false);
                 summoned->setFaction(me->getFaction());
@@ -145,7 +148,7 @@ public:
                 if (target && target->GetTypeId() == TYPEID_PLAYER && target->IsAlive())
                 {
                     FocusedTargetGUID = target->GetGUID();
-                    me->SummonCreature(ENTRY_FOCUS_FIRE, target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 5500);
+                    me->SummonCreature(NPC_FOCUS_FIRE, target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 5500);
                     Talk(EMOTE_FOCUSED, FocusedTargetGUID);
                 }
                 FocusFire_Timer = 15000+(rand()%5000);
@@ -157,19 +160,19 @@ public:
 
 };
 
-class mob_focus_fire : public CreatureScript
+class npc_focus_fire : public CreatureScript
 {
 public:
-    mob_focus_fire() : CreatureScript("mob_focus_fire") { }
+    npc_focus_fire() : CreatureScript("npc_focus_fire") { }
 
     CreatureAI* GetAI(Creature* creature) const
     {
-        return new mob_focus_fireAI (creature);
+        return new npc_focus_fireAI (creature);
     }
 
-    struct mob_focus_fireAI : public ScriptedAI
+    struct npc_focus_fireAI : public ScriptedAI
     {
-        mob_focus_fireAI(Creature* creature) : ScriptedAI(creature)
+        npc_focus_fireAI(Creature* creature) : ScriptedAI(creature)
         {
         }
 
@@ -211,5 +214,5 @@ public:
 void AddSC_boss_shirrak_the_dead_watcher()
 {
     new boss_shirrak_the_dead_watcher();
-    new mob_focus_fire();
+    new npc_focus_fire();
 }

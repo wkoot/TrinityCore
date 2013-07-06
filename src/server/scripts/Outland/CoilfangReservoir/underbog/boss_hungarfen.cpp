@@ -29,7 +29,11 @@ EndScriptData */
 enum Spells
 {
     SPELL_FOUL_SPORES           = 31673,
-    SPELL_ACID_GEYSER           = 38739
+    SPELL_ACID_GEYSER           = 38739,
+
+    SPELL_SPORE_CLOUD           = 34168,
+    SPELL_PUTRID_MUSHROOM       = 31690,
+    SPELL_GROW                  = 31698
 };
 
 class boss_hungarfen : public CreatureScript
@@ -100,23 +104,19 @@ public:
 
 };
 
-#define SPELL_SPORE_CLOUD       34168
-#define SPELL_PUTRID_MUSHROOM   31690
-#define SPELL_GROW              31698
-
-class mob_underbog_mushroom : public CreatureScript
+class npc_underbog_mushroom : public CreatureScript
 {
 public:
-    mob_underbog_mushroom() : CreatureScript("mob_underbog_mushroom") { }
+    npc_underbog_mushroom() : CreatureScript("npc_underbog_mushroom") { }
 
     CreatureAI* GetAI(Creature* creature) const
     {
-        return new mob_underbog_mushroomAI (creature);
+        return new npc_underbog_mushroomAI (creature);
     }
 
-    struct mob_underbog_mushroomAI : public ScriptedAI
+    struct npc_underbog_mushroomAI : public ScriptedAI
     {
-        mob_underbog_mushroomAI(Creature* creature) : ScriptedAI(creature) {}
+        npc_underbog_mushroomAI(Creature* creature) : ScriptedAI(creature) {}
 
         bool Stop;
         uint32 Grow_Timer;
@@ -162,5 +162,5 @@ public:
 void AddSC_boss_hungarfen()
 {
     new boss_hungarfen();
-    new mob_underbog_mushroom();
+    new npc_underbog_mushroom();
 }

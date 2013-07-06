@@ -59,7 +59,12 @@ enum SjonnirCreatures
     CREATURE_IRON_SLUDGE                                   = 28165
 };
 
-#define DATA_TIME_BEFORE_OOZE                              150000 //2min 30 secs
+enum Misc
+{
+    DATA_TIME_BEFORE_OOZE                                   = 150000, // 2min 30 secs
+    ACTION_OOZE_DEAD                                        = 1,
+    DATA_ABUSE_THE_OOZE                                     = 2
+};
 
 struct Locations
 {
@@ -71,9 +76,6 @@ static Locations PipeLocations[] =
     {1295.44f, 734.07f, 200.3f}, //left
     {1297.7f,  595.6f,  199.9f} //right
 };
-
-#define ACTION_OOZE_DEAD                                   1
-#define DATA_ABUSE_THE_OOZE                                2
 
 static Locations CenterPoint = {1295.21f, 667.157f, 189.691f};
 
@@ -247,19 +249,19 @@ public:
 
 };
 
-class mob_malformed_ooze : public CreatureScript
+class npc_malformed_ooze : public CreatureScript
 {
 public:
-    mob_malformed_ooze() : CreatureScript("mob_malformed_ooze") { }
+    npc_malformed_ooze() : CreatureScript("npc_malformed_ooze") { }
 
     CreatureAI* GetAI(Creature* creature) const
     {
-        return new mob_malformed_oozeAI(creature);
+        return new npc_malformed_oozeAI(creature);
     }
 
-    struct mob_malformed_oozeAI : public ScriptedAI
+    struct npc_malformed_oozeAI : public ScriptedAI
     {
-        mob_malformed_oozeAI(Creature* creature) : ScriptedAI(creature) {}
+        npc_malformed_oozeAI(Creature* creature) : ScriptedAI(creature) {}
 
         uint32 uiMergeTimer;
 
@@ -290,19 +292,19 @@ public:
 
 };
 
-class mob_iron_sludge : public CreatureScript
+class npc_iron_sludge : public CreatureScript
 {
 public:
-    mob_iron_sludge() : CreatureScript("mob_iron_sludge") { }
+    npc_iron_sludge() : CreatureScript("npc_iron_sludge") { }
 
     CreatureAI* GetAI(Creature* creature) const
     {
-        return new mob_iron_sludgeAI(creature);
+        return new npc_iron_sludgeAI(creature);
     }
 
-    struct mob_iron_sludgeAI : public ScriptedAI
+    struct npc_iron_sludgeAI : public ScriptedAI
     {
-        mob_iron_sludgeAI(Creature* creature) : ScriptedAI(creature)
+        npc_iron_sludgeAI(Creature* creature) : ScriptedAI(creature)
         {
             instance = creature->GetInstanceScript();
         }
@@ -342,7 +344,7 @@ class achievement_abuse_the_ooze : public AchievementCriteriaScript
 void AddSC_boss_sjonnir()
 {
     new boss_sjonnir();
-    new mob_malformed_ooze();
-    new mob_iron_sludge();
+    new npc_malformed_ooze();
+    new npc_iron_sludge();
     new achievement_abuse_the_ooze();
 }

@@ -21,7 +21,6 @@
 #include "gundrak.h"
 #include "Player.h"
 
-//Spells
 enum Spells
 {
     SPELL_POISON_NOVA                             = 55081,
@@ -32,7 +31,6 @@ enum Spells
     H_SPELL_VENOM_BOLT                            = 59839
 };
 
-//Yell
 enum Yells
 {
     SAY_AGGRO                                     = 0,
@@ -43,14 +41,12 @@ enum Yells
     EMOTE_NOVA                                    = 5
 };
 
-//Creatures
 enum Creatures
 {
     CREATURE_SNAKE                                = 29680,
     CREATURE_CONSTRICTORS                         = 29713
 };
 
-//Creatures' spells
 enum ConstrictorSpells
 {
     SPELL_GRIP_OF_SLAD_RAN                        = 55093,
@@ -68,7 +64,10 @@ static Position SpawnLoc[]=
   {1716.76f, 635.159f, 129.282f, 0.191986f}
 };
 
-#define DATA_SNAKES_WHYD_IT_HAVE_TO_BE_SNAKES 1
+enum Misc
+{
+    DATA_SNAKES_WHYD_IT_HAVE_TO_BE_SNAKES       = 1
+};
 
 class boss_slad_ran : public CreatureScript
 {
@@ -210,19 +209,19 @@ public:
 
 };
 
-class mob_slad_ran_constrictor : public CreatureScript
+class npc_slad_ran_constrictor : public CreatureScript
 {
 public:
-    mob_slad_ran_constrictor() : CreatureScript("mob_slad_ran_constrictor") { }
+    npc_slad_ran_constrictor() : CreatureScript("npc_slad_ran_constrictor") { }
 
     CreatureAI* GetAI(Creature* creature) const
     {
-        return new mob_slad_ran_constrictorAI (creature);
+        return new npc_slad_ran_constrictorAI (creature);
     }
 
-    struct mob_slad_ran_constrictorAI : public ScriptedAI
+    struct npc_slad_ran_constrictorAI : public ScriptedAI
     {
-        mob_slad_ran_constrictorAI(Creature* creature) : ScriptedAI(creature) {}
+        npc_slad_ran_constrictorAI(Creature* creature) : ScriptedAI(creature) {}
 
         uint32 uiGripOfSladRanTimer;
 
@@ -263,19 +262,19 @@ public:
 
 };
 
-class mob_slad_ran_viper : public CreatureScript
+class npc_slad_ran_viper : public CreatureScript
 {
 public:
-    mob_slad_ran_viper() : CreatureScript("mob_slad_ran_viper") { }
+    npc_slad_ran_viper() : CreatureScript("npc_slad_ran_viper") { }
 
     CreatureAI* GetAI(Creature* creature) const
     {
-        return new mob_slad_ran_viperAI (creature);
+        return new npc_slad_ran_viperAI (creature);
     }
 
-    struct mob_slad_ran_viperAI : public ScriptedAI
+    struct npc_slad_ran_viperAI : public ScriptedAI
     {
-        mob_slad_ran_viperAI(Creature* creature) : ScriptedAI(creature) {}
+        npc_slad_ran_viperAI(Creature* creature) : ScriptedAI(creature) {}
 
         uint32 uiVenomousBiteTimer;
 
@@ -322,7 +321,7 @@ class achievement_snakes_whyd_it_have_to_be_snakes : public AchievementCriteriaS
 void AddSC_boss_slad_ran()
 {
     new boss_slad_ran();
-    new mob_slad_ran_constrictor();
-    new mob_slad_ran_viper();
+    new npc_slad_ran_constrictor();
+    new npc_slad_ran_viper();
     new achievement_snakes_whyd_it_have_to_be_snakes();
 }

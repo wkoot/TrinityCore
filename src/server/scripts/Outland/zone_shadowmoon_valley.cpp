@@ -24,8 +24,8 @@ SDCategory: Shadowmoon Valley
 EndScriptData */
 
 /* ContentData
-mob_mature_netherwing_drake
-mob_enslaved_netherwing_drake
+npc_mature_netherwing_drake
+npc_enslaved_netherwing_drake
 npc_drake_dealer_hurlunk
 npcs_flanis_swiftwing_and_kagrosh
 npc_murkblood_overseer
@@ -33,8 +33,8 @@ npc_karynaku
 npc_oronok_tornheart
 npc_overlord_morghor
 npc_earthmender_wilda
-mob_torloth_the_magnificent
-mob_illidari_spawn
+npc_torloth_the_magnificent
+npc_illidari_spawn
 npc_lord_illidan_stormrage
 go_crystal_prison
 npc_enraged_spirit
@@ -50,10 +50,10 @@ EndContentData */
 #include "WorldSession.h"
 
 /*#####
-# mob_mature_netherwing_drake
+# npc_mature_netherwing_drake
 #####*/
 
-enum eMatureNetherwing
+enum MatureNetherwing
 {
     SAY_JUST_EATEN              = 0,
 
@@ -68,19 +68,19 @@ enum eMatureNetherwing
     NPC_EVENT_PINGER            = 22131
 };
 
-class mob_mature_netherwing_drake : public CreatureScript
+class npc_mature_netherwing_drake : public CreatureScript
 {
 public:
-    mob_mature_netherwing_drake() : CreatureScript("mob_mature_netherwing_drake") { }
+    npc_mature_netherwing_drake() : CreatureScript("npc_mature_netherwing_drake") { }
 
     CreatureAI* GetAI(Creature* creature) const
     {
-        return new mob_mature_netherwing_drakeAI(creature);
+        return new npc_mature_netherwing_drakeAI(creature);
     }
 
-    struct mob_mature_netherwing_drakeAI : public ScriptedAI
+    struct npc_mature_netherwing_drakeAI : public ScriptedAI
     {
-        mob_mature_netherwing_drakeAI(Creature* creature) : ScriptedAI(creature) { }
+        npc_mature_netherwing_drakeAI(Creature* creature) : ScriptedAI(creature) { }
 
         uint64 uiPlayerGUID;
 
@@ -187,31 +187,38 @@ public:
 };
 
 /*###
-# mob_enslaved_netherwing_drake
+# npc_enslaved_netherwing_drake
 ####*/
 
-#define FACTION_DEFAULT     62
-#define FACTION_FRIENDLY    1840                            // Not sure if this is correct, it was taken off of Mordenai.
+enum EnshlavedNetherwingDrake
+{
+    // Factions
+    FACTION_DEFAULT                 = 62,
+    FACTION_FRIENDLY                = 1840, // Not sure if this is correct, it was taken off of Mordenai.
 
-#define SPELL_HIT_FORCE_OF_NELTHARAKU   38762
-#define SPELL_FORCE_OF_NELTHARAKU       38775
+    // Spells
+    SPELL_HIT_FORCE_OF_NELTHARAKU   = 38762,
+    SPELL_FORCE_OF_NELTHARAKU       = 38775,
 
-#define CREATURE_DRAGONMAW_SUBJUGATOR   21718
-#define CREATURE_ESCAPE_DUMMY           22317
+    // Creatures
+    NPC_DRAGONMAW_SUBJUGATOR        = 21718,
+    NPC_ESCAPE_DUMMY                = 22317
 
-class mob_enslaved_netherwing_drake : public CreatureScript
+};
+
+class npc_enslaved_netherwing_drake : public CreatureScript
 {
 public:
-    mob_enslaved_netherwing_drake() : CreatureScript("mob_enslaved_netherwing_drake") { }
+    npc_enslaved_netherwing_drake() : CreatureScript("npc_enslaved_netherwing_drake") { }
 
     CreatureAI* GetAI(Creature* creature) const
     {
-        return new mob_enslaved_netherwing_drakeAI(creature);
+        return new npc_enslaved_netherwing_drakeAI(creature);
     }
 
-    struct mob_enslaved_netherwing_drakeAI : public ScriptedAI
+    struct npc_enslaved_netherwing_drakeAI : public ScriptedAI
     {
-        mob_enslaved_netherwing_drakeAI(Creature* creature) : ScriptedAI(creature)
+        npc_enslaved_netherwing_drakeAI(Creature* creature) : ScriptedAI(creature)
         {
             PlayerGUID = 0;
             Tapped = false;
@@ -245,7 +252,7 @@ public:
                 me->setFaction(FACTION_FRIENDLY);
                 DoCast(caster, SPELL_FORCE_OF_NELTHARAKU, true);
 
-                Unit* Dragonmaw = me->FindNearestCreature(CREATURE_DRAGONMAW_SUBJUGATOR, 50);
+                Unit* Dragonmaw = me->FindNearestCreature(NPC_DRAGONMAW_SUBJUGATOR, 50);
                 if (Dragonmaw)
                 {
                     me->AddThreat(Dragonmaw, 100000.0f);
@@ -304,7 +311,7 @@ public:
                                 dz += 20; // so it's in the air, not ground*/
 
                                 Position pos;
-                                if (Unit* EscapeDummy = me->FindNearestCreature(CREATURE_ESCAPE_DUMMY, 30))
+                                if (Unit* EscapeDummy = me->FindNearestCreature(NPC_ESCAPE_DUMMY, 30))
                                     EscapeDummy->GetPosition(&pos);
                                 else
                                 {
@@ -327,22 +334,22 @@ public:
 };
 
 /*#####
-# mob_dragonmaw_peon
+# npc_dragonmaw_peon
 #####*/
 
-class mob_dragonmaw_peon : public CreatureScript
+class npc_dragonmaw_peon : public CreatureScript
 {
 public:
-    mob_dragonmaw_peon() : CreatureScript("mob_dragonmaw_peon") { }
+    npc_dragonmaw_peon() : CreatureScript("npc_dragonmaw_peon") { }
 
     CreatureAI* GetAI(Creature* creature) const
     {
-        return new mob_dragonmaw_peonAI(creature);
+        return new npc_dragonmaw_peonAI(creature);
     }
 
-    struct mob_dragonmaw_peonAI : public ScriptedAI
+    struct npc_dragonmaw_peonAI : public ScriptedAI
     {
-        mob_dragonmaw_peonAI(Creature* creature) : ScriptedAI(creature) {}
+        npc_dragonmaw_peonAI(Creature* creature) : ScriptedAI(creature) {}
 
         uint64 PlayerGUID;
         bool Tapped;
@@ -663,7 +670,7 @@ class npc_karynaku : public CreatureScript
 # npc_overlord_morghor
 # this whole script is wrong and needs a rewrite.even the illidan npc used is the wrong one.npc id 23467 may be the correct one
 ####*/
-enum eOverlordData
+enum OverlordData
 {
     QUEST_LORD_ILLIDAN_STORMRAGE    = 11108,
 
@@ -980,7 +987,7 @@ public:
 # npc_earthmender_wilda
 ####*/
 
-enum eEarthmender
+enum Earthmender
 {
     SAY_WIL_START               = 0,
     SAY_WIL_AGGRO               = 1,
@@ -1153,8 +1160,8 @@ public:
 
 /* ContentData
 Battle of the crimson watch - creatures, gameobjects and defines
-mob_illidari_spawn : Adds that are summoned in the Crimson Watch battle.
-mob_torloth_the_magnificent : Final Creature that players have to face before quest is completed
+npc_illidari_spawn : Adds that are summoned in the Crimson Watch battle.
+npc_torloth_the_magnificent : Final Creature that players have to face before quest is completed
 npc_lord_illidan_stormrage : Creature that controls the event.
 go_crystal_prison : GameObject that begins the event and hands out quest
 EndContentData */
@@ -1240,22 +1247,22 @@ static SpawnSpells SpawnCast[]=
 };
 
 /*######
-# mob_torloth_the_magnificent
+# npc_torloth_the_magnificent
 #####*/
 
-class mob_torloth_the_magnificent : public CreatureScript
+class npc_torloth_the_magnificent : public CreatureScript
 {
 public:
-    mob_torloth_the_magnificent() : CreatureScript("mob_torloth_the_magnificent") { }
+    npc_torloth_the_magnificent() : CreatureScript("npc_torloth_the_magnificent") { }
 
     CreatureAI* GetAI(Creature* c) const
     {
-        return new mob_torloth_the_magnificentAI(c);
+        return new npc_torloth_the_magnificentAI(c);
     }
 
-    struct mob_torloth_the_magnificentAI : public ScriptedAI
+    struct npc_torloth_the_magnificentAI : public ScriptedAI
     {
-        mob_torloth_the_magnificentAI(Creature* creature) : ScriptedAI(creature) {}
+        npc_torloth_the_magnificentAI(Creature* creature) : ScriptedAI(creature) {}
 
         uint32 AnimationTimer, SpellTimer1, SpellTimer2, SpellTimer3;
 
@@ -1543,22 +1550,22 @@ public:
 };
 
 /*######
-# mob_illidari_spawn
+# npc_illidari_spawn
 ######*/
 
-class mob_illidari_spawn : public CreatureScript
+class npc_illidari_spawn : public CreatureScript
 {
 public:
-    mob_illidari_spawn() : CreatureScript("mob_illidari_spawn") { }
+    npc_illidari_spawn() : CreatureScript("npc_illidari_spawn") { }
 
     CreatureAI* GetAI(Creature* c) const
     {
-        return new mob_illidari_spawnAI(c);
+        return new npc_illidari_spawnAI(c);
     }
 
-    struct mob_illidari_spawnAI : public ScriptedAI
+    struct npc_illidari_spawnAI : public ScriptedAI
     {
-        mob_illidari_spawnAI(Creature* creature) : ScriptedAI(creature) {}
+        npc_illidari_spawnAI(Creature* creature) : ScriptedAI(creature) {}
 
         uint64 LordIllidanGUID;
         uint32 SpellTimer1, SpellTimer2, SpellTimer3;
@@ -1712,14 +1719,14 @@ void npc_lord_illidan_stormrage::npc_lord_illidan_stormrageAI::SummonNextWave()
                         Spawn->GetMotionMaster()->MovePoint(0, x, y, z);
                     }
                 }
-                CAST_AI(mob_illidari_spawn::mob_illidari_spawnAI, Spawn->AI())->LordIllidanGUID = me->GetGUID();
+                CAST_AI(npc_illidari_spawn::npc_illidari_spawnAI, Spawn->AI())->LordIllidanGUID = me->GetGUID();
             }
 
             if (WavesInfo[WaveCount].CreatureId == 22076) // Torloth
             {
-                CAST_AI(mob_torloth_the_magnificent::mob_torloth_the_magnificentAI, Spawn->AI())->LordIllidanGUID = me->GetGUID();
+                CAST_AI(npc_torloth_the_magnificent::npc_torloth_the_magnificentAI, Spawn->AI())->LordIllidanGUID = me->GetGUID();
                 if (PlayerGUID)
-                    CAST_AI(mob_torloth_the_magnificent::mob_torloth_the_magnificentAI, Spawn->AI())->AggroTargetGUID = PlayerGUID;
+                    CAST_AI(npc_torloth_the_magnificent::npc_torloth_the_magnificentAI, Spawn->AI())->AggroTargetGUID = PlayerGUID;
             }
         }
     }
@@ -1758,45 +1765,48 @@ public:
 # npc_enraged_spirits
 ####*/
 
-/* QUESTS */
-#define QUEST_ENRAGED_SPIRITS_FIRE_EARTH 10458
-#define QUEST_ENRAGED_SPIRITS_AIR 10481
-#define QUEST_ENRAGED_SPIRITS_WATER 10480
+enum Enraged_Dpirits
+{
+// QUESTS
+    QUEST_ENRAGED_SPIRITS_FIRE_EARTH        = 10458,
+    QUEST_ENRAGED_SPIRITS_AIR               = 10481,
+    QUEST_ENRAGED_SPIRITS_WATER             = 10480,
 
-/* Totem */
-#define ENTRY_TOTEM_OF_SPIRITS 21071
-#define RADIUS_TOTEM_OF_SPIRITS 15
+    // Totem
+    ENTRY_TOTEM_OF_SPIRITS                  = 21071,
+    RADIUS_TOTEM_OF_SPIRITS                 = 15,
 
-/* SPIRITS */
-#define ENTRY_ENRAGED_EARTH_SPIRIT 21050
-#define ENTRY_ENRAGED_FIRE_SPIRIT 21061
-#define ENTRY_ENRAGED_AIR_SPIRIT 21060
-#define ENTRY_ENRAGED_WATER_SPIRIT 21059
+    // SPIRITS
+    NPC_ENRAGED_EARTH_SPIRIT                = 21050,
+    NPC_ENRAGED_FIRE_SPIRIT                 = 21061,
+    NPC_ENRAGED_AIR_SPIRIT                  = 21060,
+    NPC_ENRAGED_WATER_SPIRIT                = 21059,
 
-/* SOULS */
-#define ENTRY_EARTHEN_SOUL 21073
-#define ENTRY_FIERY_SOUL 21097
-#define ENTRY_ENRAGED_AIRY_SOUL 21116
-#define ENTRY_ENRAGED_WATERY_SOUL 21109  // wrong model
+    // SOULS
+    NPC_EARTHEN_SOUL                        = 21073,
+    NPC_FIERY_SOUL                          = 21097,
+    NPC_ENRAGED_AIRY_SOUL                   = 21116,
+    NPC_ENRAGED_WATERY_SOUL                 = 21109, // wrong model
 
-/* SPELL KILLCREDIT - not working!?! - using KilledMonsterCredit */
-#define SPELL_EARTHEN_SOUL_CAPTURED_CREDIT 36108
-#define SPELL_FIERY_SOUL_CAPTURED_CREDIT 36117
-#define SPELL_AIRY_SOUL_CAPTURED_CREDIT 36182
-#define SPELL_WATERY_SOUL_CAPTURED_CREDIT 36171
+    // SPELL KILLCREDIT - not working!?! - using KilledMonsterCredit
+    SPELL_EARTHEN_SOUL_CAPTURED_CREDIT      = 36108,
+    SPELL_FIERY_SOUL_CAPTURED_CREDIT        = 36117,
+    SPELL_AIRY_SOUL_CAPTURED_CREDIT         = 36182,
+    SPELL_WATERY_SOUL_CAPTURED_CREDIT       = 36171,
 
-/* KilledMonsterCredit Workaround */
-#define CREDIT_FIRE 21094
-#define CREDIT_WATER 21095
-#define CREDIT_AIR 21096
-#define CREDIT_EARTH 21092
+    // KilledMonsterCredit Workaround
+    NPC_CREDIT_FIRE                         = 21094,
+    NPC_CREDIT_WATER                        = 21095,
+    NPC_CREDIT_AIR                          = 21096,
+    NPC_CREDIT_EARTH                        = 21092,
 
-/* Captured Spell/Buff */
-#define SPELL_SOUL_CAPTURED 36115
+    // Captured Spell / Buff
+    SPELL_SOUL_CAPTURED                     = 36115,
 
-/* Factions */
-#define ENRAGED_SOUL_FRIENDLY 35
-#define ENRAGED_SOUL_HOSTILE 14
+    // Factions
+    FACTION_ENRAGED_SOUL_FRIENDLY           = 35,
+    FACTION_ENRAGED_SOUL_HOSTILE            = 14
+};
 
 class npc_enraged_spirit : public CreatureScript
 {
@@ -1826,26 +1836,28 @@ public:
 
             switch (me->GetEntry())
             {
-              case ENTRY_ENRAGED_FIRE_SPIRIT:
-                entry  = ENTRY_FIERY_SOUL;
-                //credit = SPELL_FIERY_SOUL_CAPTURED_CREDIT;
-                credit = CREDIT_FIRE;
-              break;
-              case ENTRY_ENRAGED_EARTH_SPIRIT:
-                entry  = ENTRY_EARTHEN_SOUL;
-                //credit = SPELL_EARTHEN_SOUL_CAPTURED_CREDIT;
-                credit = CREDIT_EARTH;
-              break;
-              case ENTRY_ENRAGED_AIR_SPIRIT:
-                entry  = ENTRY_ENRAGED_AIRY_SOUL;
-                //credit = SPELL_AIRY_SOUL_CAPTURED_CREDIT;
-                credit = CREDIT_AIR;
-              break;
-              case ENTRY_ENRAGED_WATER_SPIRIT:
-                entry  = ENTRY_ENRAGED_WATERY_SOUL;
-                //credit = SPELL_WATERY_SOUL_CAPTURED_CREDIT;
-                credit = CREDIT_WATER;
-              break;
+                  case NPC_ENRAGED_FIRE_SPIRIT:
+                    entry  = NPC_FIERY_SOUL;
+                    //credit = SPELL_FIERY_SOUL_CAPTURED_CREDIT;
+                    credit = NPC_CREDIT_FIRE;
+                    break;
+                  case NPC_ENRAGED_EARTH_SPIRIT:
+                    entry  = NPC_EARTHEN_SOUL;
+                    //credit = SPELL_EARTHEN_SOUL_CAPTURED_CREDIT;
+                    credit = NPC_CREDIT_EARTH;
+                    break;
+                  case NPC_ENRAGED_AIR_SPIRIT:
+                    entry  = NPC_ENRAGED_AIRY_SOUL;
+                    //credit = SPELL_AIRY_SOUL_CAPTURED_CREDIT;
+                    credit = NPC_CREDIT_AIR;
+                    break;
+                  case NPC_ENRAGED_WATER_SPIRIT:
+                    entry  = NPC_ENRAGED_WATERY_SOUL;
+                    //credit = SPELL_WATERY_SOUL_CAPTURED_CREDIT;
+                    credit = NPC_CREDIT_WATER;
+                    break;
+                default:
+                    break;
             }
 
             // Spawn Soul on Kill ALWAYS!
@@ -1861,7 +1873,7 @@ public:
                  totemOspirits = me->FindNearestCreature(ENTRY_TOTEM_OF_SPIRITS, RADIUS_TOTEM_OF_SPIRITS);
                  if (totemOspirits)
                  {
-                     Summoned->setFaction(ENRAGED_SOUL_FRIENDLY);
+                     Summoned->setFaction(FACTION_ENRAGED_SOUL_FRIENDLY);
                      Summoned->GetMotionMaster()->MovePoint(0, totemOspirits->GetPositionX(), totemOspirits->GetPositionY(), Summoned->GetPositionZ());
 
                      if (Unit* owner = totemOspirits->GetOwner())
@@ -2000,9 +2012,9 @@ public:
 
 void AddSC_shadowmoon_valley()
 {
-    new mob_mature_netherwing_drake();
-    new mob_enslaved_netherwing_drake();
-    new mob_dragonmaw_peon();
+    new npc_mature_netherwing_drake();
+    new npc_enslaved_netherwing_drake();
+    new npc_dragonmaw_peon();
     new npc_drake_dealer_hurlunk();
     new npcs_flanis_swiftwing_and_kagrosh();
     new npc_murkblood_overseer();
@@ -2012,8 +2024,8 @@ void AddSC_shadowmoon_valley()
     new npc_earthmender_wilda();
     new npc_lord_illidan_stormrage();
     new go_crystal_prison();
-    new mob_illidari_spawn();
-    new mob_torloth_the_magnificent();
+    new npc_illidari_spawn();
+    new npc_torloth_the_magnificent();
     new npc_enraged_spirit();
     new spell_unlocking_zuluheds_chains();
     new npc_shadowmoon_tuber_node();

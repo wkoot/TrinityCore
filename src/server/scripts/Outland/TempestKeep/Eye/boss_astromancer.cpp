@@ -30,7 +30,7 @@ EndScriptData */
 
 #include "the_eye.h"
 
-enum eEnums
+enum Yells
 {
     SAY_AGGRO                           = 0,
     SAY_SUMMON1                         = 1,
@@ -38,8 +38,11 @@ enum eEnums
     SAY_KILL                            = 3,
     SAY_DEATH                           = 4,
     SAY_VOIDA                           = 5,
-    SAY_VOIDB                           = 6,
+    SAY_VOIDB                           = 6
+};
 
+enum Spells
+{
     SPELL_ARCANE_MISSILES               = 33031,
     SPELL_WRATH_OF_THE_ASTROMANCER      = 42783,
     SPELL_WRATH_OF_THE_ASTROMANCER_DOT  = 42784,
@@ -48,18 +51,28 @@ enum eEnums
     SPELL_VOID_BOLT                     = 39329,
 
     SPELL_SPOTLIGHT                     = 25824,
-    NPC_ASTROMANCER_SOLARIAN_SPOTLIGHT  = 18928,
-
-    NPC_SOLARIUM_AGENT                  = 18925,
-    NPC_SOLARIUM_PRIEST                 = 18806,
-
-    MODEL_HUMAN                         = 18239,
-    MODEL_VOIDWALKER                    = 18988,
 
     SPELL_SOLARIUM_GREAT_HEAL           = 33387,
     SPELL_SOLARIUM_HOLY_SMITE           = 25054,
-    SPELL_SOLARIUM_ARCANE_TORRENT       = 33390,
+    SPELL_SOLARIUM_ARCANE_TORRENT       = 33390
+};
 
+enum Creatures
+{
+    NPC_ASTROMANCER_SOLARIAN_SPOTLIGHT  = 18928,
+
+    NPC_SOLARIUM_AGENT                  = 18925,
+    NPC_SOLARIUM_PRIEST                 = 18806
+};
+
+enum Models
+{
+    MODEL_HUMAN                         = 18239,
+    MODEL_VOIDWALKER                    = 18988
+};
+
+enum Misc
+{
     WV_ARMOR                            = 31000
 };
 
@@ -410,18 +423,18 @@ class boss_high_astromancer_solarian : public CreatureScript
         }
 };
 
-class mob_solarium_priest : public CreatureScript
+class npc_solarium_priest : public CreatureScript
 {
     public:
 
-        mob_solarium_priest()
-            : CreatureScript("mob_solarium_priest")
+        npc_solarium_priest()
+            : CreatureScript("npc_solarium_priest")
         {
         }
 
-        struct mob_solarium_priestAI : public ScriptedAI
+        struct npc_solarium_priestAI : public ScriptedAI
         {
-            mob_solarium_priestAI(Creature* creature) : ScriptedAI(creature)
+            npc_solarium_priestAI(Creature* creature) : ScriptedAI(creature)
             {
                 instance = creature->GetInstanceScript();
             }
@@ -493,7 +506,7 @@ class mob_solarium_priest : public CreatureScript
 
         CreatureAI* GetAI(Creature* creature) const
         {
-            return new mob_solarium_priestAI(creature);
+            return new npc_solarium_priestAI(creature);
         }
 };
 
@@ -538,7 +551,7 @@ class spell_astromancer_wrath_of_the_astromancer : public SpellScriptLoader
 void AddSC_boss_high_astromancer_solarian()
 {
     new boss_high_astromancer_solarian();
-    new mob_solarium_priest();
+    new npc_solarium_priest();
     new spell_astromancer_wrath_of_the_astromancer();
 }
 
