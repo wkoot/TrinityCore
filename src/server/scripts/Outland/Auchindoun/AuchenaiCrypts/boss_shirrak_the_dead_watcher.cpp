@@ -53,9 +53,9 @@ class boss_shirrak_the_dead_watcher : public CreatureScript
 public:
     boss_shirrak_the_dead_watcher() : CreatureScript("boss_shirrak_the_dead_watcher") { }
 
-    CreatureAI* GetAI(Creature* creature) const
+    CreatureAI* GetAI(Creature* creature) const OVERRIDE
     {
-        return new boss_shirrak_the_dead_watcherAI (creature);
+        return new boss_shirrak_the_dead_watcherAI(creature);
     }
 
     struct boss_shirrak_the_dead_watcherAI : public ScriptedAI
@@ -71,7 +71,7 @@ public:
 
         uint64 FocusedTargetGUID;
 
-        void Reset()
+        void Reset() OVERRIDE
         {
             Inhibitmagic_Timer = 0;
             Attractmagic_Timer = 28000;
@@ -80,10 +80,10 @@ public:
             FocusedTargetGUID = 0;
         }
 
-        void EnterCombat(Unit* /*who*/)
+        void EnterCombat(Unit* /*who*/) OVERRIDE
         { }
 
-        void JustSummoned(Creature* summoned)
+        void JustSummoned(Creature* summoned) OVERRIDE
         {
             if (summoned && summoned->GetEntry() == NPC_FOCUS_FIRE)
             {
@@ -97,7 +97,7 @@ public:
             }
         }
 
-        void UpdateAI(uint32 diff)
+        void UpdateAI(uint32 diff) OVERRIDE
         {
             //Inhibitmagic_Timer
             if (Inhibitmagic_Timer <= diff)
@@ -165,9 +165,9 @@ class npc_focus_fire : public CreatureScript
 public:
     npc_focus_fire() : CreatureScript("npc_focus_fire") { }
 
-    CreatureAI* GetAI(Creature* creature) const
+    CreatureAI* GetAI(Creature* creature) const OVERRIDE
     {
-        return new npc_focus_fireAI (creature);
+        return new npc_focus_fireAI(creature);
     }
 
     struct npc_focus_fireAI : public ScriptedAI
@@ -179,16 +179,16 @@ public:
         uint32 FieryBlast_Timer;
         bool fiery1, fiery2;
 
-        void Reset()
+        void Reset() OVERRIDE
         {
             FieryBlast_Timer = 3000+(rand()%1000);
             fiery1 = fiery2 = true;
         }
 
-        void EnterCombat(Unit* /*who*/)
+        void EnterCombat(Unit* /*who*/) OVERRIDE
         { }
 
-        void UpdateAI(uint32 diff)
+        void UpdateAI(uint32 diff) OVERRIDE
         {
             //Return since we have no target
             if (!UpdateVictim())
