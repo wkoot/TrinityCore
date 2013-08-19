@@ -1303,17 +1303,17 @@ void World::SetInitialWorldSettings()
     LoadDBCStores(m_dataPath);
     DetectDBCLang();
 
-    TC_LOG_INFO(LOG_FILTER_SERVER_LOADING, "Loading spell dbc data corrections...");
-    sSpellMgr->LoadDbcDataCorrections();
-
     TC_LOG_INFO(LOG_FILTER_SERVER_LOADING, "Loading SpellInfo store...");
     sSpellMgr->LoadSpellInfoStore();
+
+    TC_LOG_INFO(LOG_FILTER_SERVER_LOADING, "Loading SpellInfo corrections...");
+    sSpellMgr->LoadSpellInfoCorrections();
 
     TC_LOG_INFO(LOG_FILTER_SERVER_LOADING, "Loading SkillLineAbilityMultiMap Data...");
     sSpellMgr->LoadSkillLineAbilityMap();
 
-    TC_LOG_INFO(LOG_FILTER_SERVER_LOADING, "Loading spell custom attributes...");
-    sSpellMgr->LoadSpellCustomAttr();
+    TC_LOG_INFO(LOG_FILTER_SERVER_LOADING, "Loading SpellInfo custom attributes...");
+    sSpellMgr->LoadSpellInfoCustomAttributes();
 
     TC_LOG_INFO(LOG_FILTER_SERVER_LOADING, "Loading GameObject models...");
     LoadGameObjectModelList();
@@ -1460,8 +1460,8 @@ void World::SetInitialWorldSettings()
     TC_LOG_INFO(LOG_FILTER_SERVER_LOADING, "Loading Quest POI");
     sObjectMgr->LoadQuestPOI();
 
-    TC_LOG_INFO(LOG_FILTER_SERVER_LOADING, "Loading Quests Relations...");
-    sObjectMgr->LoadQuestRelations();                            // must be after quest load
+    TC_LOG_INFO(LOG_FILTER_SERVER_LOADING, "Loading Quests Starters and Enders...");
+    sObjectMgr->LoadQuestStartersAndEnders();                    // must be after quest load
 
     TC_LOG_INFO(LOG_FILTER_SERVER_LOADING, "Loading Objects Pooling Data...");
     sPoolMgr->LoadFromDB();
