@@ -246,11 +246,20 @@ namespace MMAP
         printf("Building mesh from file\n");
         int tileX, tileY, mapId;
         if (fread(&mapId, sizeof(int), 1, file) != 1)
+        {
+            fclose(file);
             return;
+        }
         if (fread(&tileX, sizeof(int), 1, file) != 1)
+        {
+            fclose(file);
             return;
+        }
         if (fread(&tileY, sizeof(int), 1, file) != 1)
+        {
+            fclose(file);
             return;
+        }
 
         dtNavMesh* navMesh = NULL;
         buildNavMesh(mapId, navMesh);
@@ -562,19 +571,7 @@ namespace MMAP
 
         // merge per tile poly and detail meshes
         rcPolyMesh** pmmerge = new rcPolyMesh*[TILES_PER_MAP * TILES_PER_MAP];
-        if (!pmmerge)
-        {
-            printf("%s alloc pmmerge FIALED!\n", tileString);
-            return;
-        }
-
         rcPolyMeshDetail** dmmerge = new rcPolyMeshDetail*[TILES_PER_MAP * TILES_PER_MAP];
-        if (!dmmerge)
-        {
-            printf("%s alloc dmmerge FIALED!\n", tileString);
-            return;
-        }
-
         int nmerge = 0;
         // build all tiles
         for (int y = 0; y < TILES_PER_MAP; ++y)
@@ -669,12 +666,9 @@ namespace MMAP
                 rcFreeContourSet(tile.cset);
                 tile.cset = NULL;
 
-                if (tile.pmesh)
-                {
-                    pmmerge[nmerge] = tile.pmesh;
-                    dmmerge[nmerge] = tile.dmesh;
-                    nmerge++;
-                }
+                pmmerge[nmerge] = tile.pmesh;
+                dmmerge[nmerge] = tile.dmesh;
+                nmerge++;
             }
         }
 
