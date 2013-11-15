@@ -24,6 +24,7 @@
 #include "SpellScript.h"
 #include "SpellAuras.h"
 #include "SpellAuraEffects.h"
+#include "Vehicle.h"
 
 /*####
 ## npc_drakuru_shackles
@@ -46,7 +47,7 @@ public:
 
     struct npc_drakuru_shacklesAI : public ScriptedAI
     {
-        npc_drakuru_shacklesAI(Creature* creature) : ScriptedAI(creature) {}
+        npc_drakuru_shacklesAI(Creature* creature) : ScriptedAI(creature) { }
 
         void Reset() OVERRIDE
         {
@@ -132,7 +133,7 @@ public:
 
     struct npc_captured_rageclawAI : public ScriptedAI
     {
-        npc_captured_rageclawAI(Creature* creature) : ScriptedAI(creature) {}
+        npc_captured_rageclawAI(Creature* creature) : ScriptedAI(creature) { }
 
         void Reset() OVERRIDE
         {
@@ -140,8 +141,7 @@ public:
             DoCast(me, SPELL_KNEEL, true); // Little Hack for kneel - Thanks Illy :P
         }
 
-        void MoveInLineOfSight(Unit* /*who*/)OVERRIDE {}
-
+        void MoveInLineOfSight(Unit* /*who*/) OVERRIDE { }
 
         void SpellHit(Unit* /*caster*/, const SpellInfo* spell) OVERRIDE
         {
@@ -266,7 +266,7 @@ public:
 
     struct npc_gurgthockAI : public ScriptedAI
     {
-        npc_gurgthockAI(Creature* creature) : ScriptedAI(creature) {}
+        npc_gurgthockAI(Creature* creature) : ScriptedAI(creature) { }
 
         void Reset() OVERRIDE
         {
@@ -725,7 +725,7 @@ public:
 
     struct npc_yggdrasAI : public ScriptedAI
     {
-        npc_yggdrasAI(Creature* creature) : ScriptedAI(creature) {}
+        npc_yggdrasAI(Creature* creature) : ScriptedAI(creature) { }
 
         void Reset() OVERRIDE
         {
@@ -942,7 +942,7 @@ public:
 
     struct npc_elemental_lordAI : public ScriptedAI
     {
-        npc_elemental_lordAI(Creature* creature) : ScriptedAI(creature) {}
+        npc_elemental_lordAI(Creature* creature) : ScriptedAI(creature) { }
 
         std::list<uint64> SummonList;
 
@@ -1087,7 +1087,7 @@ public:
 
     struct npc_fiend_elementalAI : public ScriptedAI
     {
-        npc_fiend_elementalAI(Creature* creature) : ScriptedAI(creature) {}
+        npc_fiend_elementalAI(Creature* creature) : ScriptedAI(creature) { }
 
         void Reset() OVERRIDE
         {
@@ -1153,7 +1153,7 @@ public:
 
     struct npc_released_offspring_harkoaAI : public ScriptedAI
     {
-        npc_released_offspring_harkoaAI(Creature* creature) : ScriptedAI(creature) {}
+        npc_released_offspring_harkoaAI(Creature* creature) : ScriptedAI(creature) { }
 
         void Reset() OVERRIDE
         {
@@ -1199,7 +1199,7 @@ public:
 
     struct npc_crusade_recruitAI : public ScriptedAI
     {
-        npc_crusade_recruitAI(Creature* creature) : ScriptedAI(creature) {}
+        npc_crusade_recruitAI(Creature* creature) : ScriptedAI(creature) { }
 
         void Reset() OVERRIDE
         {
@@ -1814,6 +1814,54 @@ class spell_fetch_ingredient_aura : public SpellScriptLoader
         }
 };
 
+enum StormCloud
+{
+    STORM_COULD         = 29939,
+    HEALING_WINDS       = 55549,
+    STORM_VISUAL        = 55708,
+    GYMERS_GRAB         = 55516,
+    RIDE_VEHICLE        = 43671
+};
+
+class npc_storm_cloud : public CreatureScript
+{
+public:
+    npc_storm_cloud() : CreatureScript("npc_storm_cloud") { }
+
+    struct npc_storm_cloudAI : public ScriptedAI
+    {
+        npc_storm_cloudAI(Creature* creature) : ScriptedAI(creature) { }
+
+        void Reset() OVERRIDE
+        {
+            me->CastSpell(me, STORM_VISUAL, true);
+        }
+
+        void JustRespawned() OVERRIDE
+        {
+            Reset();
+        }
+
+        void SpellHit(Unit* caster, const SpellInfo* spell) OVERRIDE
+        {
+            if (spell->Id != GYMERS_GRAB)
+                return;
+
+            if (Vehicle* veh = caster->GetVehicleKit())
+                if (veh->GetAvailableSeatCount() != 0)
+            {
+                me->CastSpell(caster, RIDE_VEHICLE, true);
+                me->CastSpell(caster, HEALING_WINDS, true);
+            }
+        }
+    };
+
+    CreatureAI* GetAI(Creature* creature) const OVERRIDE
+    {
+        return new npc_storm_cloudAI(creature);
+    }
+};
+
 void AddSC_zuldrak()
 {
     new npc_drakuru_shackles();
@@ -1834,4 +1882,5 @@ void AddSC_zuldrak()
     new spell_random_ingredient();
     new spell_pot_check();
     new spell_fetch_ingredient_aura();
+    new npc_storm_cloud();
 }

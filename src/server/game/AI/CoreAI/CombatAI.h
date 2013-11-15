@@ -28,7 +28,7 @@ class Creature;
 class AggressorAI : public CreatureAI
 {
     public:
-        explicit AggressorAI(Creature* c) : CreatureAI(c) {}
+        explicit AggressorAI(Creature* c) : CreatureAI(c) { }
 
         void UpdateAI(uint32);
         static int Permissible(const Creature*);
@@ -39,7 +39,7 @@ typedef std::vector<uint32> SpellVct;
 class CombatAI : public CreatureAI
 {
     public:
-        explicit CombatAI(Creature* c) : CreatureAI(c) {}
+        explicit CombatAI(Creature* c) : CreatureAI(c) { }
 
         void InitializeAI();
         void Reset();
@@ -72,7 +72,7 @@ struct ArcherAI : public CreatureAI
         void AttackStart(Unit* who);
         void UpdateAI(uint32 diff);
 
-        static int Permissible(const Creature*);
+        static int Permissible(Creature const*);
     protected:
         float m_minRange;
 };
@@ -81,11 +81,11 @@ struct TurretAI : public CreatureAI
 {
     public:
         explicit TurretAI(Creature* c);
-        bool CanAIAttack(const Unit* who) const;
+        bool CanAIAttack(Unit const* who) const;
         void AttackStart(Unit* who);
         void UpdateAI(uint32 diff);
 
-        static int Permissible(const Creature*);
+        static int Permissible(Creature const*);
     protected:
         float m_minRange;
 };
@@ -98,14 +98,13 @@ struct VehicleAI : public CreatureAI
         explicit VehicleAI(Creature* c);
 
         void UpdateAI(uint32 diff);
-        static int Permissible(const Creature*);
+        static int Permissible(Creature const*);
         void Reset();
-        void MoveInLineOfSight(Unit*) {}
-        void AttackStart(Unit*) {}
+        void MoveInLineOfSight(Unit*) { }
+        void AttackStart(Unit*) { }
         void OnCharmed(bool apply);
 
     private:
-        Vehicle* m_vehicle;
         bool m_IsVehicleInUse;
         void LoadConditions();
         void CheckConditions(const uint32 diff);

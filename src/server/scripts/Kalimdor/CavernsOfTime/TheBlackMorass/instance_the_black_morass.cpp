@@ -193,16 +193,16 @@ public:
                 {
                     if (data == IN_PROGRESS)
                     {
-                        TC_LOG_DEBUG(LOG_FILTER_TSCR, "Instance The Black Morass: Starting event.");
+                        TC_LOG_DEBUG("scripts", "Instance The Black Morass: Starting event.");
                         InitWorldState();
                         m_auiEncounter[1] = IN_PROGRESS;
-                        Events.ScheduleEvent(EVENT_NEXT_PORTAL, 15000);
+                        ScheduleEventNextPortal(15000);
                     }
 
                     if (data == DONE)
                     {
                         //this may be completed further out in the post-event
-                        TC_LOG_DEBUG(LOG_FILTER_TSCR, "Instance The Black Morass: Event completed.");
+                        TC_LOG_DEBUG("scripts", "Instance The Black Morass: Event completed.");
                         Map::PlayerList const& players = instance->GetPlayers();
 
                         if (!players.isEmpty())
@@ -228,7 +228,7 @@ public:
                 if (data == SPECIAL)
                 {
                     if (mRiftPortalCount < 7)
-                        Events.ScheduleEvent(EVENT_NEXT_PORTAL, 5000);
+                        ScheduleEventNextPortal(5000);
                 }
                 else
                     m_auiEncounter[1] = data;
@@ -267,7 +267,7 @@ public:
             if (entry == RIFT_BOSS)
                 entry = RandRiftBoss();
 
-            TC_LOG_DEBUG(LOG_FILTER_TSCR, "Instance The Black Morass: Summoning rift boss entry %u.", entry);
+            TC_LOG_DEBUG("scripts", "Instance The Black Morass: Summoning rift boss entry %u.", entry);
 
             Position pos;
             me->GetRandomNearPosition(pos, 10.0f);
@@ -278,7 +278,7 @@ public:
             if (Creature* summon = me->SummonCreature(entry, pos, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 600000))
                 return summon;
 
-            TC_LOG_DEBUG(LOG_FILTER_TSCR, "Instance The Black Morass: What just happened there? No boss, no loot, no fun...");
+            TC_LOG_DEBUG("scripts", "Instance The Black Morass: What just happened there? No boss, no loot, no fun...");
             return NULL;
         }
 
@@ -291,7 +291,7 @@ public:
                 if (tmp >= _currentRiftId)
                     ++tmp;
 
-                TC_LOG_DEBUG(LOG_FILTER_TSCR, "Instance The Black Morass: Creating Time Rift at locationId %i (old locationId was %u).", tmp, _currentRiftId);
+                TC_LOG_DEBUG("scripts", "Instance The Black Morass: Creating Time Rift at locationId %i (old locationId was %u).", tmp, _currentRiftId);
 
                 _currentRiftId = tmp;
 
@@ -336,8 +336,14 @@ public:
                 ++mRiftPortalCount;
                 DoUpdateWorldState(WORLD_STATE_BM_RIFT, mRiftPortalCount);
                 DoSpawnPortal();
-                Events.ScheduleEvent(EVENT_NEXT_PORTAL, RiftWaves[GetRiftWaveId()].NextPortalTime);
+                ScheduleEventNextPortal(RiftWaves[GetRiftWaveId()].NextPortalTime);
             }
+        }
+
+        void ScheduleEventNextPortal(uint32 nextPortalTime)
+        {
+            if (nextPortalTime > 0)
+                Events.RescheduleEvent(EVENT_NEXT_PORTAL, nextPortalTime);
         }
 
         protected:

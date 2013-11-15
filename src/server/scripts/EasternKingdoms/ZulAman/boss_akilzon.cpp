@@ -261,11 +261,14 @@ class boss_akilzon : public CreatureScript
                                 DoCast(target, SPELL_ELECTRICAL_STORM, false); // storm cyclon + visual
                                 float x, y, z;
                                 target->GetPosition(x, y, z);
+                                /// @todo: fix it in correct way, that causes player to can fly until logout
+                                /*
                                 if (target)
                                 {
                                     target->SetDisableGravity(true);
                                     target->MonsterMoveWithSpeed(x, y, me->GetPositionZ()+15, 0);
                                 }
+                                */
 
                                 Unit* Cloud = me->SummonTrigger(x, y, me->GetPositionZ()+16, 0, 15000);
                                 if (Cloud)
@@ -389,7 +392,7 @@ class npc_akilzon_eagle : public CreatureScript
                 DoZoneInCombat();
             }
 
-            void MoveInLineOfSight(Unit* /*who*/) OVERRIDE {}
+            void MoveInLineOfSight(Unit* /*who*/) OVERRIDE { }
 
 
             void MovementInform(uint32, uint32) OVERRIDE
