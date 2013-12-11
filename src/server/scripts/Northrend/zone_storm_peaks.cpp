@@ -452,14 +452,14 @@ enum BrannBronzebeard
     EVENT_SCRIPT_13       = 13
 };
 
-class npc_brann_bronzebeard : public CreatureScript
+class npc_brann_bronzebeard_keystone : public CreatureScript
 {
 public:
-    npc_brann_bronzebeard() : CreatureScript("npc_brann_bronzebeard") { }
+    npc_brann_bronzebeard_keystone() : CreatureScript("npc_brann_bronzebeard_keystone") { }
 
-    struct npc_brann_bronzebeardAI : public ScriptedAI
+    struct npc_brann_bronzebeard_keystoneAI : public ScriptedAI
     {
-        npc_brann_bronzebeardAI(Creature* creature) : ScriptedAI(creature) { }
+        npc_brann_bronzebeard_keystoneAI(Creature* creature) : ScriptedAI(creature) { }
 
         void Reset() OVERRIDE
         {
@@ -551,14 +551,13 @@ public:
                         events.ScheduleEvent(EVENT_SCRIPT_11, 6000);
                         break;
                     case EVENT_SCRIPT_11:
-                        me->SetOrientation(2.932153f);
-                        me->SendMovementFlagUpdate(true);
+                        me->SetFacingTo(2.932153f);
                         Talk(SAY_BRANN_3, playerGUID);
+
                         for (uint8 i = 0; i < 5; ++i)
-                        {
                             if (GameObject* go = ObjectAccessor::GetGameObject(*me, objectGUID[i]))
                                 go->Delete();
-                        }
+
                         events.ScheduleEvent(EVENT_SCRIPT_12, 6000);
                         break;
                     case EVENT_SCRIPT_12:
@@ -584,7 +583,7 @@ public:
 
     CreatureAI* GetAI(Creature* creature) const OVERRIDE
     {
-        return new npc_brann_bronzebeardAI(creature);
+        return new npc_brann_bronzebeard_keystoneAI(creature);
     }
 };
 
@@ -643,6 +642,10 @@ enum JokkumScriptcast
 {
     SPELL_JOKKUM_KILL_CREDIT    = 56545,
     SPELL_JOKKUM_SUMMON         = 56541,
+    SPELL_RIDE_JOKKUM           = 56606,
+    NPC_KINGJOKKUM              = 30331,
+    SAY_HOLD_ON                 = 0,
+    PATH_JOKKUM                 = 2072200
 };
 
 class spell_jokkum_scriptcast : public SpellScriptLoader
@@ -666,6 +669,17 @@ class spell_jokkum_scriptcast : public SpellScriptLoader
                 {
                     player->CastSpell(player, SPELL_JOKKUM_KILL_CREDIT, true);
                     player->CastSpell(player, SPELL_JOKKUM_SUMMON, true);
+
+                    if (Creature* kingjokkum = GetClosestCreatureWithEntry(player, NPC_KINGJOKKUM, 10.0f))
+                    {
+                        kingjokkum->setFaction(player->getFaction());
+                        player->CastSpell(kingjokkum, SPELL_RIDE_JOKKUM, true);
+                        player->SetUInt64Value(PLAYER_FARSIGHT, player->GetGUID());
+                        kingjokkum->AI()->Talk(0, player->GetGUID());
+                        kingjokkum->ToPlayer()->SetClientControl(kingjokkum, 1);
+                        kingjokkum->GetMotionMaster()->MovePath(PATH_JOKKUM, false);
+                        kingjokkum->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IMMUNE_TO_NPC);
+                    }
                 }
             }
 
@@ -689,7 +703,7 @@ void AddSC_storm_peaks()
     new npc_freed_protodrake();
     new npc_icefang();
     new npc_hyldsmeet_protodrake();
-    new npc_brann_bronzebeard();
+    new npc_brann_bronzebeard_keystone();
     new spell_close_rift();
     new spell_jokkum_scriptcast();
 }
