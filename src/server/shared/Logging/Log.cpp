@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2013 TrinityCore <http://www.trinitycore.org/>
+ * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -267,7 +267,7 @@ void Log::vlog(std::string const& filter, LogLevel level, char const* str, va_li
     write(new LogMessage(level, filter, text));
 }
 
-void Log::write(LogMessage* msg) const
+void Log::write(LogMessage* msg)
 {
     Logger const* logger = GetLoggerByType(msg->type);
     msg->text.append("\n");
@@ -376,6 +376,7 @@ void Log::Close()
     delete worker;
     worker = NULL;
     loggers.clear();
+    cachedLoggers.clear();
     for (AppenderMap::iterator it = appenders.begin(); it != appenders.end(); ++it)
     {
         delete it->second;
