@@ -29,6 +29,7 @@ class WDT
 {
 public:
     WDT(std::string file);
+    ~WDT();
 
     ChunkedData* Data;
     std::vector<TilePos> TileTable;
@@ -36,8 +37,8 @@ public:
     bool IsValid;
     std::string ModelFile;
     WorldModelDefinition ModelDefinition;
-    WorldModelRoot* Model;
-    bool HasTile(int x, int y);
+    WorldModelRoot const* Model;
+    bool HasTile(int x, int y) const;
 private:
     void ReadGlobalModel();
     void ReadTileTable();

@@ -26,6 +26,8 @@ public:
         TRIANGLE_TYPE_UNKNOWN,
         TRIANGLE_TYPE_TERRAIN,
         TRIANGLE_TYPE_WATER,
+        TRIANGLE_TYPE_MAGMA,
+        TRIANGLE_TYPE_SLIME,
         TRIANGLE_TYPE_DOODAD,
         TRIANGLE_TYPE_WMO
     };
@@ -57,6 +59,7 @@ public:
     };
 
     static const float TileSize;
+    static const float TileVoxelSize;
     static const float MaxXY;
     static const float ChunkSize;
     static const float UnitSize;
