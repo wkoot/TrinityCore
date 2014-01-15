@@ -81,7 +81,7 @@ public:
     MPQFile(const char* filename);    // filenames are not case sensitive
     ~MPQFile() { close(); }
     size_t Read(void* dest, size_t bytes);
-    Stream* GetFileStream();
+    FILE* GetFileStream();
     size_t getSize() { return size; }
     size_t getPos() { return pointer; }
     char* getBuffer() { return buffer; }

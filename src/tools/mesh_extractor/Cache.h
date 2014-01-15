@@ -31,6 +31,17 @@ class GenericCache
 public:
     GenericCache() {}
 
+    static const uint32 FlushLimit = 300; // We can't get too close to filling up all the memory, and we have to be wary of the maximum number of open streams.
+
+    void Insert(K key, T* val)
+    {
+        ACE_GUARD(ACE_Thread_Mutex, g, mutex);
+
+        if (_items.size() > FlushLimit)
+            Clear();
+        _items[key] = val;
+    }
+
     T* Get(K key)
     {
         ACE_GUARD_RETURN(ACE_Thread_Mutex, g, mutex, NULL);

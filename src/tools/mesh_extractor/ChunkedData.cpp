@@ -86,7 +86,6 @@ ChunkedData::~ChunkedData()
         delete *itr;
 
     Chunks.clear();
-    /* WorldModelGroup Data and SubData share the same _Stream so it's deleted twice and it crahes
-    if (_Stream)
-        delete _Stream;*/
+    if (Stream)
+        fclose(Stream);
 }

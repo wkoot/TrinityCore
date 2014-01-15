@@ -16,12 +16,71 @@
  */
 
 #include "ContinentBuilder.h"
+#include "TileBuilder.h"
 #include "WDT.h"
 #include "Utils.h"
 #include "DetourNavMesh.h"
 #include "Cache.h"
+#include "ace/Task.h"
 #include "Recast.h"
 #include "DetourCommon.h"
+
+class BuilderThread : public ACE_Task_Base
+{
+private:
+    int X, Y, MapId;
+    std::string Continent;
+    dtNavMeshParams Params;
+    ContinentBuilder* cBuilder;
+public:
+    BuilderThread(ContinentBuilder* _cBuilder, dtNavMeshParams& params) : Params(params), cBuilder(_cBuilder), Free(true) {}
+    
+    void SetData(int x, int y, int map, const std::string& cont) 
+    { 
+        X = x; 
+        Y = y; 
+        MapId = map; 
+        Continent = cont; 
+    }
+
+    int svc()
+    {
+        Free = false;
+        printf("[%02i,%02i] Building tile\n", X, Y);
+        TileBuilder builder(cBuilder, Continent, X, Y, MapId);
+        char buff[100];
+        sprintf(buff, "mmaps/%03u%02i%02i.mmtile", MapId, Y, X);
+        FILE* f = fopen(buff, "r");
+        if (f) // Check if file already exists.
+        {
+            printf("[%02i,%02i] Tile skipped, file already exists\n", X, Y);
+            fclose(f);
+            Free = true;
+            return 0;
+        }
+        uint8* nav = builder.BuildTiled(Params);
+        if (nav)
+        {
+            f = fopen(buff, "wb");
+            if (!f)
+            {
+                printf("Could not create file %s. Check that you have write permissions to the destination folder and try again\n", buff);
+                return 0;
+            }
+            MmapTileHeader header;
+            header.size = builder.DataSize;
+            fwrite(&header, sizeof(MmapTileHeader), 1, f);
+            fwrite(nav, sizeof(unsigned char), builder.DataSize, f);
+            fclose(f);
+        }
+        dtFree(nav);
+        printf("[%02i,%02i] Tile Built!\n", X, Y);
+        Free = true;
+        return 0;
+    }
+
+    bool Free;
+};
 
 void ContinentBuilder::getTileBounds(uint32 tileX, uint32 tileY, float* verts, int vertCount, float* bmin, float* bmax)
 {
@@ -129,7 +188,7 @@ void ContinentBuilder::Build()
             {
                 for (std::vector<BuilderThread*>::iterator _th = Threads.begin(); _th != Threads.end(); ++_th)
                 {
-                    if ((*_th)->Free.value())
+                    if ((*_th)->Free)
                     {
                         (*_th)->SetData(itr->X, itr->Y, MapId, Continent);
                         (*_th)->activate();
@@ -143,12 +202,12 @@ void ContinentBuilder::Build()
         }
     }
 
+    Cache->Clear();
+
     // Free memory
     for (std::vector<BuilderThread*>::iterator _th = Threads.begin(); _th != Threads.end(); ++_th)
     {
         (*_th)->wait();
         delete *_th;
     }
-
-    Cache->Clear();
 }

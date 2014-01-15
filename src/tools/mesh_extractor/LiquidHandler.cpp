@@ -23,13 +23,6 @@ LiquidHandler::LiquidHandler( ADT* adt ) : Source(adt)
     HandleNewLiquid();
 }
 
-LiquidHandler::~LiquidHandler()
-{
-    for (std::vector<MCNKLiquidData*>::iterator itr = MCNKData.begin(); itr != MCNKData.end(); ++itr)
-        delete *itr;
-    MCNKData.clear();
-}
-
 void LiquidHandler::HandleNewLiquid()
 {
     Chunk* chunk = Source->Data->GetChunkByName("MH2O");
@@ -51,18 +44,12 @@ void LiquidHandler::HandleNewLiquid()
         if (h.LayerCount == 0)
         {
             // Need to fill in missing data with dummies.
-            MCNKData.push_back(new MCNKLiquidData(NULL, H2ORenderMask()));
+            MCNKData.push_back(MCNKLiquidData(NULL, H2ORenderMask()));
             continue;
         }
-        stream->Seek(chunk->Offset + h.OffsetInformation, SEEK_SET);
+        fseek(stream, chunk->Offset + h.OffsetInformation, SEEK_SET);
         H2OInformation information = H2OInformation::Read(stream);
 
-        // Load the LiquidTypes DBC
-        DBC const* liquidTypes = MPQHandler->GetDBC("LiquidTypes");
-        Record const* liquid = liquidTypes->GetRecordById(information.LiquidType);
-        ASSERT(liquid);
-
-        // This pointer will be passed to the MCNKLiquidData constructor, from that point on, it is the job of MCNKLiquidData's destructor to release it.
         float** heights = new float*[9];
         for (int j = 0; j < 9; ++j)
         {
@@ -71,24 +58,26 @@ void LiquidHandler::HandleNewLiquid()
         }
 
         H2ORenderMask renderMask;
-        if (information.LiquidType != 2 && information.LiquidType != 6 && information.LiquidType != 10) // Skip Ocean, Slow Ocean and Fast Ocean
+        if (information.LiquidType != 2)
         {
-            stream->Seek(chunk->Offset + h.OffsetRender, SEEK_SET);
+            fseek(stream, chunk->Offset + h.OffsetRender, SEEK_SET);
             renderMask = H2ORenderMask::Read(stream);
             if ((Utils::IsAllZero(renderMask.Mask, 8) || (information.Width == 8 && information.Height == 8)) && information.OffsetMask2)
             {
-                stream->Seek(chunk->Offset + information.OffsetMask2, SEEK_SET);
+                fseek(stream, chunk->Offset + information.OffsetMask2, SEEK_SET);
                 uint32 size = ceil(information.Width * information.Height / 8.0f);
-                uint8* altMask = (uint8*)stream->Read(size);
-                for (uint32 mi = 0; mi < size; mi++)
-                    renderMask.Mask[mi + information.OffsetY] |= altMask[mi];
+                uint8* altMask = new uint8[size];
+                if (fread(altMask, sizeof(uint8), size, stream) == size)
+                    for (uint32 mi = 0; mi < size; mi++)
+                        renderMask.Mask[mi + information.OffsetY] |= altMask[mi];
                 delete[] altMask;
             }
-            stream->Seek(chunk->Offset + information.OffsetHeightmap, SEEK_SET);
+            fseek(stream, chunk->Offset + information.OffsetHeightmap, SEEK_SET);
 
             for (int y = information.OffsetY; y < (information.OffsetY + information.Height); y++)
                 for (int x = information.OffsetX; x < (information.OffsetX + information.Width); x++)
-                    heights[x][y] = stream->Read<float>();
+                    if (fread(&heights[x][y], sizeof(float), 1, stream) != 1)
+                        return;
         }
         else
         {
@@ -121,34 +110,9 @@ void LiquidHandler::HandleNewLiquid()
                 Vertices.push_back(Vector3(location.x - Constants::UnitSize, location.y, location.z));
                 Vertices.push_back(Vector3(location.x, location.y - Constants::UnitSize, location.z));
                 Vertices.push_back(Vector3(location.x - Constants::UnitSize, location.y - Constants::UnitSize, location.z));
-                
-                // Define the liquid type
-                Constants::TriangleType type = Constants::TRIANGLE_TYPE_UNKNOWN;
-                switch (information.LiquidType)
-                {
-                    case 1: // Water
-                    case 2: // Ocean
-                    case 5: // Slow Water
-                    case 6: // Slow Ocean
-                    case 9: // Fast Water
-                    case 10: // Fast Ocean
-                    default:
-                        type = Constants::TRIANGLE_TYPE_WATER;
-                        break;
-                    case 3: // Magma
-                    case 7: // Slow Magma
-                    case 11: // Fast Magma
-                        type = Constants::TRIANGLE_TYPE_MAGMA;
-                        break;
-                    case 4: // Slime
-                    case 8: // Slow Slime
-                    case 12: // Fast Slime
-                        type = Constants::TRIANGLE_TYPE_SLIME;
-                        break;
-                }
 
-                Triangles.push_back(Triangle<uint32>(type, vertOffset, vertOffset+2, vertOffset + 1));
-                Triangles.push_back(Triangle<uint32>(type, vertOffset + 2, vertOffset + 3, vertOffset + 1));
+                Triangles.push_back(Triangle<uint32>(Constants::TRIANGLE_TYPE_WATER, vertOffset, vertOffset+2, vertOffset + 1));
+                Triangles.push_back(Triangle<uint32>(Constants::TRIANGLE_TYPE_WATER, vertOffset + 2, vertOffset + 3, vertOffset + 1));
             }
         }
     }

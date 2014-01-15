@@ -36,11 +36,8 @@ CacheClass* Cache;
 
 void ExtractMMaps(std::set<uint32>& mapIds, uint32 threads)
 {
-    std::string basePath = "mmaps/";
-    Utils::CreateDir(basePath);
-
     DBC* dbc = MPQHandler->GetDBC("Map");
-    printf("Map.dbc contains " SIZEFMTD " rows.\n", dbc->Records.size());
+    printf("Map.dbc contains %u rows.\n", dbc->Records.size());
     for (std::vector<Record*>::iterator itr = dbc->Records.begin(); itr != dbc->Records.end(); ++itr)
     {
         uint32 mapId = (*itr)->Values[0];
@@ -398,8 +395,8 @@ int main(int argc, char* argv[])
 
     if (extractFlags & Constants::EXTRACT_FLAG_TEST)
     {
-        float start[] = { -554.538330f, 2211.998779f, 49.802097f };
-        float end[] = { -530.584839f, 2211.550781f, 61.736004f };
+        float start[] = { 16226.200195f, 16257.000000f, 13.202200f };
+        float end[] = { 16245.725586f, 16382.465820f, 47.384956f };
 
         //
         float m_spos[3];
@@ -465,37 +462,24 @@ int main(int argc, char* argv[])
             return 0;
         }
 
-        status = navMeshQuery->initSlicedFindPath(m_startRef, m_endRef, m_spos, m_epos, &m_filter);
-        while (status != DT_SUCCESS)
-            status = navMeshQuery->updateSlicedFindPath(1, 0);
-        
-        dtPolyRef* pathRefs = new dtPolyRef[2048];
-        int pcount = 0;
-        int resultHopCount = 0;
-        float* straightPath = new float[2048 * 3];
-        unsigned char* pathFlags = new unsigned char[2048];
+        int hops;
         dtPolyRef* hopBuffer = new dtPolyRef[8192];
+        dtStatus status = navMeshQuery->findPath(m_startRef, m_endRef, m_spos, m_epos, &m_filter, hopBuffer, &hops, 8192);
+        
+        int resultHopCount;
+        float* straightPath = new float[2048*3];
+        unsigned char* pathFlags = new unsigned char[2048];
+        dtPolyRef* pathRefs = new dtPolyRef[2048];
 
-        navMeshQuery->finalizeSlicedFindPath(pathRefs, &pcount, 200);
+        status = navMeshQuery->findStraightPath(m_spos, m_epos, hopBuffer, hops, straightPath, pathFlags, pathRefs, &resultHopCount, 2048);
         std::vector<Vector3> FinalPath;
-
-        for (int i = 0; i < pcount; ++i)
-        {
-            navMeshQuery->findStraightPath(m_spos, m_epos, &pathRefs[i], 1,
-                straightPath, pathFlags,
-                hopBuffer, &resultHopCount, 200);
-            Vector3 finalV = Utils::ToWoWCoords(Vector3(straightPath[0 * 3 + 0], straightPath[0 * 3 + 1], straightPath[0 * 3 + 2]));
-            FinalPath.push_back(finalV);
-            printf("Point %f %f %f\n", finalV.x, finalV.y, finalV.z);
-        }
-        /*
         FinalPath.reserve(resultHopCount);
-        for (int i = 0; i < resultHopCount; ++i)
+        for (uint32 i = 0; i < resultHopCount; ++i)
         {
             Vector3 finalV = Utils::ToWoWCoords(Vector3(straightPath[i * 3 + 0], straightPath[i * 3 + 1], straightPath[i * 3 + 2]));
             FinalPath.push_back(finalV);
             printf("Point %f %f %f\n", finalV.x, finalV.y, finalV.z);
-        }*/
+        }
     }
 
     return 0;

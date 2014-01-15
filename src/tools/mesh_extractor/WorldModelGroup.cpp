@@ -20,33 +20,14 @@
 #include "Chunk.h"
 #include "Utils.h"
 
-WorldModelGroup::WorldModelGroup(std::string path, int groupIndex) : SubData(NULL), GroupIndex(groupIndex), MOBA(NULL), MOBALength(0), IsBad(false), HasLiquidData(false)
+WorldModelGroup::WorldModelGroup( std::string path, int groupIndex ) : GroupIndex(groupIndex), MOBA(NULL), IsBad(false), HasLiquidData(false)
 {
     Data = new ChunkedData(path);
-    if (!Data->_Stream)
+    if (!Data->Stream)
     {
         IsBad = true;
         return;
     }
-    Load(path);
-}
-
-WorldModelGroup::WorldModelGroup(Stream* stream, std::string path, int groupIndex) : SubData(NULL), GroupIndex(groupIndex), MOBA(NULL), MOBALength(0), IsBad(false), HasLiquidData(false)
-{
-    Data = new ChunkedData(stream, stream->GetSize());
-    Load(path);
-}
-
-WorldModelGroup::~WorldModelGroup()
-{
-    delete Data;
-    delete SubData;
-    delete[] MOBA;
-    
-}
-
-void WorldModelGroup::Load(std::string& path)
-{
     Chunk* mainChunk = Data->GetChunkByName("MOGP");
     int32 firstSub = mainChunk->FindSubChunkOffset("MOPY");
     if (firstSub == -1)
@@ -88,7 +69,7 @@ void WorldModelGroup::ReadLiquid()
         return;
 
     HasLiquidData = true;
-    Stream* stream = chunk->GetStream();
+    FILE* stream = chunk->GetStream();
     LiquidDataHeader = LiquidHeader::Read(stream);
     LiquidDataGeometry = LiquidData::Read(stream, LiquidDataHeader);
 }

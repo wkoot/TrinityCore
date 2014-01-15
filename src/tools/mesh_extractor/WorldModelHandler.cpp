@@ -81,6 +81,11 @@ void WorldModelHandler::ProcessInternal( MapChunk* mcnk )
 
         std::string path = (*_paths)[wmo.MwidIndex];
         WorldModelRoot* model = Cache->WorldModelCache.Get(path);
+        if (!model)
+        {
+            model = new WorldModelRoot(path);
+            Cache->WorldModelCache.Insert(path, model);
+        }
 
         Vertices.reserve(1000);
         Triangles.reserve(1000);
@@ -88,14 +93,13 @@ void WorldModelHandler::ProcessInternal( MapChunk* mcnk )
         InsertModelGeometry(Vertices, Triangles, wmo, model);
     }
     // Restore the stream position
-    stream->Seek(mcnk->Source->Offset, SEEK_SET);
+    fseek(stream, mcnk->Source->Offset, SEEK_SET);
 }
 
 void WorldModelHandler::InsertModelGeometry( std::vector<Vector3>& verts, std::vector<Triangle<uint32> >& tris, const WorldModelDefinition& def, WorldModelRoot* root, bool translate )
 {
-    for (std::vector<WorldModelGroup*>::iterator groupItr =  root->Groups.begin(); groupItr != root->Groups.end(); ++groupItr)
+    for (std::vector<WorldModelGroup>::iterator group =  root->Groups.begin(); group != root->Groups.end(); ++group)
     {
-        WorldModelGroup* group = *groupItr;
         uint32 vertOffset = verts.size();
         for (std::vector<Vector3>::iterator itr2 = group->Vertices.begin(); itr2 != group->Vertices.end(); ++itr2)
         {
@@ -107,9 +111,8 @@ void WorldModelHandler::InsertModelGeometry( std::vector<Vector3>& verts, std::v
         for (uint32 i = 0; i < group->Triangles.size(); ++i)
         {
             // only include colliding tris
-            if ((group->TriangleFlags[i] & 0x04) != 0 || group->TriangleMaterials[i] == 0xFF)
+            if ((group->TriangleFlags[i] & 0x04) != 0 && group->TriangleMaterials[i] != 0xFF)
                 continue;
-
             Triangle<uint16> tri = group->Triangles[i];
             tris.push_back(Triangle<uint32>(Constants::TRIANGLE_TYPE_WMO, tri.V0 + vertOffset, tri.V1 + vertOffset, tri.V2 + vertOffset));
         }
@@ -130,6 +133,11 @@ void WorldModelHandler::InsertModelGeometry( std::vector<Vector3>& verts, std::v
         for (std::vector<DoodadInstance>::iterator instance = instances.begin(); instance != instances.end(); ++instance)
         {
             Model* model = Cache->ModelCache.Get(instance->File);
+            if (!model)
+            {
+                model = new Model(instance->File);
+                Cache->ModelCache.Insert(instance->File, model);
+            }
 
             if (!model->IsCollidable)
                 continue;
@@ -143,9 +151,8 @@ void WorldModelHandler::InsertModelGeometry( std::vector<Vector3>& verts, std::v
                 tris.push_back(Triangle<uint32>(Constants::TRIANGLE_TYPE_WMO, itr2->V0 + vertOffset, itr2->V1 + vertOffset, itr2->V2 + vertOffset));
         }
 
-        for (std::vector<WorldModelGroup*>::iterator groupItr =  root->Groups.begin(); groupItr != root->Groups.end(); ++groupItr)
+        for (std::vector<WorldModelGroup>::iterator group =  root->Groups.begin(); group != root->Groups.end(); ++group)
         {
-            WorldModelGroup* group = *groupItr;
             if (!group->HasLiquidData)
                 continue;
 

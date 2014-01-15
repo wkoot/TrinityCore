@@ -35,7 +35,7 @@ TileBuilder::TileBuilder(ContinentBuilder* _cBuilder, std::string world, int x, 
 {
     // Config for normal maps
     memset(&Config, 0, sizeof(rcConfig));
-    Config.cs = Constants::TileSize / 1778.0f; // TileSize / voxelSize
+    Config.cs = Constants::TileSize / 1800.0f; // TileSize / voxelSize
     Config.ch = 0.3f;
     Config.minRegionArea = 36;
     Config.mergeRegionArea = 144;
@@ -43,8 +43,8 @@ TileBuilder::TileBuilder(ContinentBuilder* _cBuilder, std::string world, int x, 
     Config.detailSampleDist = 3.0f;
     Config.detailSampleMaxError = 1.25f;
     Config.walkableClimb = 1.0f / Config.ch;
-    Config.walkableHeight = 2.1;
-    Config.walkableRadius = 0.6f;
+    Config.walkableHeight = 2.1 / Config.ch;
+    Config.walkableRadius = 0.6f / Config.cs;
     Config.maxEdgeLen = Config.walkableRadius * 8;
     Config.borderSize = Config.walkableRadius + 8;
     Config.tileSize = 1800;
@@ -59,13 +59,13 @@ TileBuilder::TileBuilder(ContinentBuilder* _cBuilder, std::string world, int x, 
     InstanceConfig.mergeRegionArea = 100;
     InstanceConfig.walkableSlopeAngle = 50.0f;
     InstanceConfig.detailSampleDist = 3.0f;
-    InstanceConfig.detailSampleMaxError = 1.25f;
+    InstanceConfig.detailSampleMaxError = 1.5f;
     InstanceConfig.walkableClimb = 1.0f / InstanceConfig.ch;
     InstanceConfig.walkableHeight = 2.1f / InstanceConfig.ch;
     InstanceConfig.walkableRadius = 0.6f / InstanceConfig.cs;
     InstanceConfig.maxEdgeLen = 8 * InstanceConfig.walkableRadius;
     InstanceConfig.maxVertsPerPoly = 6;
-    InstanceConfig.maxSimplificationError = 1.3f;
+    InstanceConfig.maxSimplificationError = 1.25f;
     InstanceConfig.borderSize = 0;
 
     Context = new rcContext;
@@ -234,8 +234,7 @@ uint8* TileBuilder::BuildTiled(dtNavMeshParams& navMeshParams)
     CalculateTileBounds(bmin, bmax, navMeshParams);
     _Geometry->CalculateMinMaxHeight(bmin[1], bmax[1]);
 
-    // This is commented out to reduce the size of the resulting files (and the time it takes to generate them), we shouldn't need to load 4 more ADTs each time.
-    /*// again, we load everything - wasteful but who cares
+    // again, we load everything - wasteful but who cares
     for (int ty = Y - 1; ty <= Y + 1; ty++)
     {
         for (int tx = X - 1; tx <= X + 1; tx++)
@@ -255,7 +254,7 @@ uint8* TileBuilder::BuildTiled(dtNavMeshParams& navMeshParams)
             _Geometry->AddAdt(_adt);
             delete _adt;
         }
-    }*/
+    }
 
     OutputDebugVertices();
     
@@ -352,11 +351,11 @@ uint8* TileBuilder::BuildTiled(dtNavMeshParams& navMeshParams)
     rcFreeHeightField(hf);
     rcFreeCompactHeightfield(chf);
     rcFreeContourSet(contours);
-    delete[] vertices;
-    delete[] triangles;
-    delete[] areas;
-    delete[] bmin;
-    delete[] bmax;
+    delete vertices;
+    delete triangles;
+    delete areas;
+    delete bmin;
+    delete bmax;
 
     if (!params.polyCount || !params.polys || Constants::TilesPerMap * Constants::TilesPerMap == params.polyCount)
     {

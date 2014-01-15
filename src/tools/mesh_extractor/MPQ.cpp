@@ -17,7 +17,6 @@
 
 #include "MPQ.h"
 #include "MPQManager.h"
-#include "Stream.h"
 #include <deque>
 #include <cstdio>
 

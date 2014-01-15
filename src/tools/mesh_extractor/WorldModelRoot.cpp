@@ -32,10 +32,6 @@ WorldModelRoot::WorldModelRoot( std::string path )
 WorldModelRoot::~WorldModelRoot()
 {
     delete Data;
-    for (std::vector<WorldModelGroup*>::iterator group = Groups.begin(); group != Groups.end(); ++group)
-        delete *group;
-
-    Groups.clear();
 }
 
 void WorldModelRoot::ReadGroups()
@@ -46,10 +42,9 @@ void WorldModelRoot::ReadGroups()
     {
         char name[200];
         sprintf(name, "%s_%03u.wmo", pathBase.c_str(), i);
-        Stream* stream = MPQHandler->GetFile(name);
-        if (!stream)
-            continue;
-        Groups.emplace_back(WorldModelGroup(stream, name, i)); // @ToDo: Use the real signature of emplace_back with variadic templates once we make the full switch to C++11 (At least Visual Studio 2012)
+        WorldModelGroup group(name, i);
+        if (!group.IsBad)
+            Groups.push_back(group);
     }
 }
 
@@ -96,6 +91,6 @@ void WorldModelRoot::ReadHeader()
     if (!chunk)
         return;
 
-    Stream* stream = chunk->GetStream();
+    FILE* stream = chunk->GetStream();
     Header = WorldModelHeader::Read(stream);
 }

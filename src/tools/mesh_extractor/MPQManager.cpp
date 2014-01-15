@@ -31,12 +31,6 @@ char const* MPQManager::Files[] = {
     "patch-3.MPQ"
 };
 
-char const* MPQManager::LocalePatchFiles[] = {
-    "Data/%s/patch-%s.MPQ",
-    "Data/%s/patch-%s-2.MPQ",
-    "Data/%s/patch-%s-3.MPQ"
-};
-
 char const* MPQManager::Languages[] = { "enGB", "enUS", "deDE", "esES", "frFR", "koKR", "zhCN", "zhTW", "enCN", "enTW", "esMX", "ruRU" };
 
 void MPQManager::Initialize()
@@ -54,6 +48,7 @@ void MPQManager::Initialize()
 void MPQManager::InitializeDBC()
 {
     BaseLocale = -1;
+    std::string fileName;
     uint32 size = sizeof(Languages) / sizeof(char*);
     MPQArchive* _baseLocale = NULL;
     for (uint32 i = 0; i < size; ++i)
@@ -99,46 +94,6 @@ DBC* MPQManager::GetDBC(const std::string& name )
 {
     std::string path = "DBFilesClient\\" + name + ".dbc";
     return new DBC(GetFile(path));
-}
-
-Stream* MPQManager::GetFileFromLocale( const std::string& path, uint32 locale )
-{
-    ACE_GUARD_RETURN(ACE_Thread_Mutex, g, mutex, NULL);
-    std::deque<MPQArchive*> files = LocaleFiles[locale];
-    Stream* ret = NULL;
-    for (std::deque<MPQArchive*>::iterator itr = files.begin(); itr != files.end(); ++itr)
-    {
-        mpq_archive* mpq_a = (*itr)->mpq_a;
-
-        uint32_t filenum;
-        if(libmpq__file_number(mpq_a, path.c_str(), &filenum))
-            continue;
-        libmpq__off_t transferred;
-        libmpq__off_t size = 0;
-        libmpq__file_unpacked_size(mpq_a, filenum, &size);
-
-        // HACK: in patch.mpq some files don't want to open and give 1 for filesize
-        if (size <= 1)
-            continue;
-
-        char* buffer = new char[size];
-
-        //libmpq_file_getdata
-        libmpq__file_read(mpq_a, filenum, (unsigned char*)buffer, size, &transferred);
-        
-        // Pack the return into a FILE stream
-        ret = tmpfile();
-        if (!ret)
-        {
-            printf("Could not create temporary file. Please run as Administrator or root\n");
-            exit(1);
-        }
-        fwrite(buffer, sizeof(uint8), size, ret);
-        fseek(ret, 0, SEEK_SET);
-        delete[] buffer;
-        break;
-    }
-    return ret;
 }
 
 FILE* MPQManager::GetFileFrom(const std::string& path, MPQArchive* file )

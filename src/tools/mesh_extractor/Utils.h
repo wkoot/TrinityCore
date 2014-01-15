@@ -206,7 +206,7 @@ public:
     Vector3 BoundingBox[2];
     uint32 LiquidTypeRelated;
 
-    static WorldModelHeader Read(Stream* stream);
+    static WorldModelHeader Read(FILE* stream);
 };
 
 class DoodadInstance
@@ -249,36 +249,22 @@ public:
     Vector3 BaseLocation;
     uint16 MaterialId;
 
-    void Read(Stream* stream);
+    static LiquidHeader Read(FILE* stream);
 };
 
 class LiquidData
 {
 public:
     LiquidData() {}
-    
-    ~LiquidData()
-    {
-        /*for (uint32 i = 0; i < CountXVertices; ++i)
-            delete[] HeightMap[i];
-        delete[] HeightMap;
-
-        for (uint32 i = 0; i < Width; ++i)
-            delete[] RenderFlags[i];
-        delete[] RenderFlags;*/
-    }
-
     float** HeightMap;
     uint8** RenderFlags;
-    uint32 CountXVertices;
-    uint32 Width;
 
     bool ShouldRender(int x, int y)
     {
         return RenderFlags[x][y] != 0x0F;
     }
 
-    void Read(Stream* stream, LiquidHeader& header);
+    static LiquidData Read(FILE* stream, LiquidHeader& header);
 };
 
 class H2ORenderMask
@@ -383,6 +369,8 @@ class Utils
 {
 public:
     static void Reverse(char word[]);
+    static std::string ReadString(FILE* file);
+    static uint32 Size(FILE* file);
     static Vector3 ToRecast(const Vector3& val );
     static std::string GetAdtPath(const std::string& world, int x, int y);
     static std::string FixModelPath(const std::string& path);
@@ -406,15 +394,14 @@ public:
                 return false;
         return true;
     }
-    static std::string Replace(std::string str, const std::string& oldStr, const std::string& newStr);
-    static void CreateDir(const std::string& Path);
-    static void SaveToDisk(Stream* stream, const std::string& path);
-    static Vector3 ToWoWCoords(const Vector3& vec);
-    static std::string GetExtension( std::string path);
+    static std::string Replace( std::string str, const std::string& oldStr, const std::string& newStr );
+    static void CreateDir( const std::string& Path );
+    static void SaveToDisk(FILE* stream, const std::string& path);
+    static Vector3 ToWoWCoords(const Vector3& vec );
+    static std::string GetExtension( std::string path );
     static char* GetPlainName(const char* FileName);
-    static Vector3 TransformDoodadVertex(const IDefinition& def, Vector3 vec, bool translate = true);
-    static Vector3 VectorTransform(const Vector3& vec, const G3D::Matrix4& matrix, bool normal = false);
-    static Vector3 TransformWmoDoodad(const DoodadInstance& inst, const WorldModelDefinition& root, Vector3& vec, bool translate = true);
-    static void InitializeMmapTileHeader(MmapTileHeader& header);
+    static Vector3 TransformDoodadVertex(const IDefinition& def, Vector3& vec, bool translate = true);
+    static Vector3 VectorTransform(const Vector3& vec, const G3D::Matrix4& matrix, bool normal = false );
+    static Vector3 TransformWmoDoodad(const DoodadInstance& inst, const WorldModelDefinition& root, Vector3& vec, bool translate = true );
 };
 #endif
