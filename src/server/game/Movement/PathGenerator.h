@@ -40,9 +40,7 @@ enum PathType
 enum PolyFlag
 {
     POLY_FLAG_WALK  = 1,
-    POLY_FLAG_WATER = 2,
-    POLY_FLAG_MAGMA = 4,
-    POLY_FLAG_SLIME = 8
+    POLY_FLAG_SWIM  = 2
 };
 
 class PathGenerator
