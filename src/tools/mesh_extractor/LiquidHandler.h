@@ -35,6 +35,5 @@ public:
     std::vector<MCNKLiquidData*> MCNKData;
 private:
     void HandleNewLiquid();
-    void HandleOldLiquid();
 };
 #endif

@@ -17,13 +17,10 @@
 
 #include "LiquidHandler.h"
 #include "Utils.h"
-#include "DBC.h"
-#include "MPQManager.h"
 
 LiquidHandler::LiquidHandler( ADT* adt ) : Source(adt)
 {
     HandleNewLiquid();
-    HandleOldLiquid();
 }
 
 LiquidHandler::~LiquidHandler()
@@ -42,7 +39,7 @@ void LiquidHandler::HandleNewLiquid()
     Vertices.reserve(1000);
     Triangles.reserve(1000);
 
-    Stream* stream = chunk->GetStream();
+    FILE* stream = chunk->GetStream();
     H2OHeader header[256];
     MCNKData.reserve(256);
     for (int i = 0; i < 256; i++)
@@ -61,7 +58,7 @@ void LiquidHandler::HandleNewLiquid()
         H2OInformation information = H2OInformation::Read(stream);
 
         // Load the LiquidTypes DBC
-        DBC const* liquidTypes = MPQHandler->GetDBC("LiquidType");
+        DBC const* liquidTypes = MPQHandler->GetDBC("LiquidTypes");
         Record const* liquid = liquidTypes->GetRecordById(information.LiquidType);
         ASSERT(liquid);
 
@@ -72,9 +69,9 @@ void LiquidHandler::HandleNewLiquid()
             heights[j] = new float[9];
             memset(heights[j], 0, sizeof(float) * 9);
         }
-        
+
         H2ORenderMask renderMask;
-        if (liquid->GetValue<uint32>(3) != 1) // Read the liquid type and skip Ocean, Slow Ocean and Fast Ocean
+        if (information.LiquidType != 2 && information.LiquidType != 6 && information.LiquidType != 10) // Skip Ocean, Slow Ocean and Fast Ocean
         {
             stream->Seek(chunk->Offset + h.OffsetRender, SEEK_SET);
             renderMask = H2ORenderMask::Read(stream);
@@ -104,7 +101,7 @@ void LiquidHandler::HandleNewLiquid()
                     heights[x][y] = information.HeightLevel1;
         }
 
-        MCNKData.push_back(new MCNKLiquidData(heights, renderMask));
+        MCNKData.push_back(MCNKLiquidData(heights, renderMask));
 
         for (int y = information.OffsetY; y < (information.OffsetY + information.Height); y++)
         {
@@ -127,16 +124,25 @@ void LiquidHandler::HandleNewLiquid()
                 
                 // Define the liquid type
                 Constants::TriangleType type = Constants::TRIANGLE_TYPE_UNKNOWN;
-                switch (liquid->GetValue<uint32>(3))
+                switch (information.LiquidType)
                 {
-                    case 0: // Water
-                    case 1: // Ocean
+                    case 1: // Water
+                    case 2: // Ocean
+                    case 5: // Slow Water
+                    case 6: // Slow Ocean
+                    case 9: // Fast Water
+                    case 10: // Fast Ocean
+                    default:
                         type = Constants::TRIANGLE_TYPE_WATER;
                         break;
-                    case 2: // Magma
+                    case 3: // Magma
+                    case 7: // Slow Magma
+                    case 11: // Fast Magma
                         type = Constants::TRIANGLE_TYPE_MAGMA;
                         break;
-                    case 3: // Slime
+                    case 4: // Slime
+                    case 8: // Slow Slime
+                    case 12: // Fast Slime
                         type = Constants::TRIANGLE_TYPE_SLIME;
                         break;
                 }
@@ -145,16 +151,5 @@ void LiquidHandler::HandleNewLiquid()
                 Triangles.push_back(Triangle<uint32>(type, vertOffset + 2, vertOffset + 3, vertOffset + 1));
             }
         }
-    }
-}
-
-void LiquidHandler::HandleOldLiquid()
-{
-    for (uint32 i = 0; i < 256; ++i)
-    {
-        MapChunk* mapChunk = Source->MapChunks[i];
-        if (!mapChunk->Header.OffsetMCLQ || mapChunk->Header.SizeMCLQ <= 8)
-            continue;
-        printf("Found old liquid");
     }
 }

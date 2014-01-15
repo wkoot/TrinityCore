@@ -20,21 +20,12 @@
 #include "ChunkedData.h"
 #include "Utils.h"
 #include "WorldModelHandler.h"
-#include "Cache.h"
 
 WDT::WDT(std::string file) : IsGlobalModel(false), IsValid(false), Model(NULL)
 {
     Data = new ChunkedData(file, 2);
     ReadTileTable();
     ReadGlobalModel();
-}
-
-WDT::~WDT()
-{
-    // Temporarily delete the underlying stream
-    // @TODO: Remove this code once the ChunkedData destructor properly releases _Stream
-    delete Data->_Stream;
-    delete Data;
 }
 
 void WDT::ReadGlobalModel()
@@ -47,7 +38,7 @@ void WDT::ReadGlobalModel()
     IsGlobalModel = true;
     ModelDefinition = WorldModelDefinition::Read(defChunk->GetStream());
     ModelFile = fileChunk->GetStream()->ReadString();
-    Model = Cache->WorldModelCache.Get(ModelFile);
+    Model = new WorldModelRoot(ModelFile);
 }
 
 void WDT::ReadTileTable()
@@ -63,7 +54,7 @@ void WDT::ReadTileTable()
         {
             const uint32 hasTileFlag = 0x1;
             uint32 flags = stream->Read<uint32>();
-            stream->Skip<uint32>();
+            uint32 discard = stream->Read<uint32>();
 
             if (flags & hasTileFlag)
                 TileTable.push_back(TilePos(x, y));
@@ -72,9 +63,9 @@ void WDT::ReadTileTable()
     }
 }
 
-bool WDT::HasTile( int x, int y ) const
+bool WDT::HasTile( int x, int y )
 {
-    for (std::vector<TilePos>::const_iterator itr = TileTable.begin(); itr != TileTable.end(); ++itr)
+    for (std::vector<TilePos>::iterator itr = TileTable.begin(); itr != TileTable.end(); ++itr)
         if (itr->X == x && itr->Y == y)
             return true;
     return false;

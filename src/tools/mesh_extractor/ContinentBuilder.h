@@ -17,15 +17,9 @@
 
 #ifndef CONT_BUILDER_H
 #define CONT_BUILDER_H
-
 #include <string>
 #include "WDT.h"
 #include "Define.h"
-#include "TileBuilder.h"
-
-#include <ace/Task.h>
-#include <ace/Activation_Queue.h>
-#include <ace/Method_Request.h>
 
 class ContinentBuilder
 {
@@ -36,7 +30,7 @@ public:
         {}
 
     void Build();
-    void getTileBounds(uint32 tileX, uint32 tileY, float* verts, int vertCount, float* bmin, float* bmax) const;
+    void getTileBounds(uint32 tileX, uint32 tileY, float* verts, int vertCount, float* bmin, float* bmax);
     void CalculateTileBounds();
     float bmin[3];
     float bmax[3];
@@ -54,7 +48,7 @@ private:
 class TileBuildRequest : public ACE_Method_Request
 {
 public:
-    TileBuildRequest(ContinentBuilder* builder, std::string& continent, uint32 x, uint32 y, uint32 mapId, dtNavMeshParams& params) : _mapId(mapId), _builder(builder), _continent(continent), X(x), Y(y), _params(params) { }
+    TileBuildRequest(ContinentBuilder* builder, std::string& continent, uint32 x, uint32 y, uint32 mapId, dtNavMeshParams& params) : _builder(builder), _continent(continent), X(x), Y(y), _mapId(mapId), _params(params) { }
 
     virtual int call();
 

@@ -31,18 +31,13 @@ class GenericCache
 public:
     GenericCache() {}
 
-    T const* Get(K key)
+    T* Get(K key)
     {
         ACE_GUARD_RETURN(ACE_Thread_Mutex, g, mutex, NULL);
         typename std::map<K, T*>::iterator itr = _items.find(key);
         if (itr != _items.end())
             return itr->second;
-        else
-        {
-            T* t = new T(key); // Create the object
-            _items[key] = t;
-            return t;
-        }
+        return NULL;
     }
 
     void Clear()

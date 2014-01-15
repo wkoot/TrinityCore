@@ -26,6 +26,18 @@
 
 class Unit;
 
+// 74*4.0f=296y  number_of_points*interval = max_path_len
+// this is way more than actual evade range
+// I think we can safely cut those down even more
+#define MAX_PATH_LENGTH         74
+#define MAX_POINT_PATH_LENGTH   74
+
+#define SMOOTH_PATH_STEP_SIZE   4.0f
+#define SMOOTH_PATH_SLOP        0.3f
+
+#define VERTEX_SIZE       3
+#define INVALID_POLYREF   0
+
 enum PathType
 {
     PATHFIND_BLANK          = 0x00,   // path not built yet
@@ -35,12 +47,6 @@ enum PathType
     PATHFIND_NOPATH         = 0x08,   // no valid path at all or error in generating one
     PATHFIND_NOT_USING_PATH = 0x10,   // used when we are either flying/swiming or on map w/o mmaps
     PATHFIND_SHORT          = 0x20,   // path is longer or equal to its limited path length
-};
-
-enum PolyFlag
-{
-    POLY_FLAG_WALK  = 1,
-    POLY_FLAG_SWIM  = 2
 };
 
 class PathGenerator
@@ -53,6 +59,10 @@ class PathGenerator
         // return: true if new path was calculated, false otherwise (no change needed)
         bool CalculatePath(float destX, float destY, float destZ, bool forceDest = false);
 
+        // option setters - use optional
+        void SetUseStraightPath(bool useStraightPath) { _useStraightPath = useStraightPath; }
+        void SetPathLengthLimit(float distance) { _pointPathLimit = std::min<uint32>(uint32(distance/SMOOTH_PATH_STEP_SIZE), MAX_POINT_PATH_LENGTH); }
+
         // result getters
         G3D::Vector3 const& GetStartPosition() const { return _startPosition; }
         G3D::Vector3 const& GetEndPosition() const { return _endPosition; }
@@ -61,8 +71,6 @@ class PathGenerator
         Movement::PointsArray const& GetPath() const { return _pathPoints; }
 
         PathType GetPathType() const { return _type; }
-        
-        static float MinWallDistance;
 
     private:
         Movement::PointsArray _pathPoints;  // our actual (x,y,z) path to the target
@@ -81,13 +89,6 @@ class PathGenerator
         void SetStartPosition(G3D::Vector3 const& point) { _startPosition = point; }
         void SetEndPosition(G3D::Vector3 const& point) { _actualEndPosition = point; _endPosition = point; }
         void SetActualEndPosition(G3D::Vector3 const& point) { _actualEndPosition = point; }
-
-        // Path smoothing
-        void SmoothPath(float* polyPickExt, int pathLength, float*& straightPath);
-        float DistanceToWall(float* polyPickExt, float* pos, float* hitPos, float* hitNormal);
-        // dtPointInPolygon will return false when the point is too close to the edge, so we rewrite the test function.
-        static bool PointInPoly(float* pos, float* verts, int nv, float err);
-        static float GetTriangleArea(float* verts, int nv);
 
         void CreateFilter();
         void UpdateFilter();

@@ -35,7 +35,7 @@ TileBuilder::TileBuilder(ContinentBuilder* _cBuilder, std::string world, int x, 
 {
     // Config for normal maps
     memset(&Config, 0, sizeof(rcConfig));
-    Config.cs = Constants::TileSize / Constants::TileVoxelSize; // TileSize / voxelSize
+    Config.cs = Constants::TileSize / 1778.0f; // TileSize / voxelSize
     Config.ch = 0.3f;
     Config.minRegionArea = 36;
     Config.mergeRegionArea = 144;
@@ -47,7 +47,7 @@ TileBuilder::TileBuilder(ContinentBuilder* _cBuilder, std::string world, int x, 
     Config.walkableRadius = 0.6f;
     Config.maxEdgeLen = Config.walkableRadius * 8;
     Config.borderSize = Config.walkableRadius + 8;
-    Config.tileSize = Constants::TileSize;
+    Config.tileSize = 1800;
     Config.maxSimplificationError = 1.3f;
     Config.maxVertsPerPoly = 6;
 
@@ -61,8 +61,8 @@ TileBuilder::TileBuilder(ContinentBuilder* _cBuilder, std::string world, int x, 
     InstanceConfig.detailSampleDist = 3.0f;
     InstanceConfig.detailSampleMaxError = 1.25f;
     InstanceConfig.walkableClimb = 1.0f / InstanceConfig.ch;
-    InstanceConfig.walkableHeight = 2.1f;
-    InstanceConfig.walkableRadius = 0.6f;
+    InstanceConfig.walkableHeight = 2.1f / InstanceConfig.ch;
+    InstanceConfig.walkableRadius = 0.6f / InstanceConfig.cs;
     InstanceConfig.maxEdgeLen = 8 * InstanceConfig.walkableRadius;
     InstanceConfig.maxVertsPerPoly = 6;
     InstanceConfig.maxSimplificationError = 1.3f;
@@ -71,7 +71,7 @@ TileBuilder::TileBuilder(ContinentBuilder* _cBuilder, std::string world, int x, 
     Context = new rcContext;
 }
 
-void TileBuilder::CalculateTileBounds( float*& bmin, float*& bmax, dtNavMeshParams& /*navMeshParams*/ ) const
+void TileBuilder::CalculateTileBounds( float*& bmin, float*& bmax, dtNavMeshParams& /*navMeshParams*/ )
 {
     bmin = new float[3];
     bmax = new float[3];
@@ -81,7 +81,7 @@ void TileBuilder::CalculateTileBounds( float*& bmin, float*& bmax, dtNavMeshPara
     bmax[2] = Constants::Origin[2] /*navMeshParams.orig[2]*/ + (Constants::TileSize * (Y + 1));
 }
 
-void TileBuilder::AddGeometry(WorldModelRoot const* root, const WorldModelDefinition& def)
+void TileBuilder::AddGeometry(WorldModelRoot* root, const WorldModelDefinition& def)
 {
     _Geometry = new Geometry();
     _Geometry->Transform = true;
@@ -91,7 +91,7 @@ void TileBuilder::AddGeometry(WorldModelRoot const* root, const WorldModelDefini
     OutputDebugVertices();
 }
 
-uint8* TileBuilder::BuildInstance( dtNavMeshParams& /*navMeshParams*/ )
+uint8* TileBuilder::BuildInstance( dtNavMeshParams& navMeshParams )
 {
     float* bmin = NULL, *bmax = NULL;
 
@@ -114,16 +114,16 @@ uint8* TileBuilder::BuildInstance( dtNavMeshParams& /*navMeshParams*/ )
     rcCreateHeightfield(Context, *hf, InstanceConfig.width, InstanceConfig.height, InstanceConfig.bmin, InstanceConfig.bmax, InstanceConfig.cs, InstanceConfig.ch);
 
     rcClearUnwalkableTriangles(Context, InstanceConfig.walkableSlopeAngle, vertices, numVerts, triangles, numTris, areas);
-    rcRasterizeTriangles(Context, vertices, numVerts, triangles, areas, numTris, *hf, ceilf(InstanceConfig.walkableClimb / InstanceConfig.ch));
+    rcRasterizeTriangles(Context, vertices, numVerts, triangles, areas, numTris, *hf, InstanceConfig.walkableClimb);
 
-    rcFilterLowHangingWalkableObstacles(Context, ceilf(InstanceConfig.walkableClimb / InstanceConfig.ch), *hf);
-    rcFilterLedgeSpans(Context, ceilf(InstanceConfig.walkableHeight / InstanceConfig.ch), ceilf(InstanceConfig.walkableClimb / InstanceConfig.ch), *hf);
-    rcFilterWalkableLowHeightSpans(Context, ceilf(InstanceConfig.walkableHeight / InstanceConfig.ch), *hf);
+    rcFilterLowHangingWalkableObstacles(Context, InstanceConfig.walkableClimb, *hf);
+    rcFilterLedgeSpans(Context, InstanceConfig.walkableHeight, InstanceConfig.walkableClimb, *hf);
+    rcFilterWalkableLowHeightSpans(Context, InstanceConfig.walkableHeight, *hf);
 
     rcCompactHeightfield* chf = rcAllocCompactHeightfield();
-    rcBuildCompactHeightfield(Context, ceilf(InstanceConfig.walkableHeight / InstanceConfig.ch), ceilf(InstanceConfig.walkableClimb / InstanceConfig.ch), *hf, *chf);
+    rcBuildCompactHeightfield(Context, InstanceConfig.walkableHeight, InstanceConfig.walkableClimb, *hf, *chf);
 
-    rcErodeWalkableArea(Context, ceilf(InstanceConfig.walkableRadius / InstanceConfig.cs), *chf);
+    rcErodeWalkableArea(Context, InstanceConfig.walkableRadius, *chf);
     rcBuildDistanceField(Context, *chf);
     rcBuildRegions(Context, *chf, InstanceConfig.borderSize, InstanceConfig.minRegionArea, InstanceConfig.minRegionArea);
 
@@ -166,9 +166,9 @@ uint8* TileBuilder::BuildInstance( dtNavMeshParams& /*navMeshParams*/ )
     // General settings
     params.ch = InstanceConfig.ch;
     params.cs = InstanceConfig.cs;
-    params.walkableClimb = InstanceConfig.walkableClimb;
-    params.walkableHeight = InstanceConfig.walkableHeight;
-    params.walkableRadius = InstanceConfig.walkableRadius;
+    params.walkableClimb = InstanceConfig.walkableClimb * InstanceConfig.ch;
+    params.walkableHeight = InstanceConfig.walkableHeight * InstanceConfig.ch;
+    params.walkableRadius = InstanceConfig.walkableRadius * InstanceConfig.cs;
     params.tileX = X;
     params.tileY = Y;
     params.tileLayer = 0;
@@ -183,11 +183,11 @@ uint8* TileBuilder::BuildInstance( dtNavMeshParams& /*navMeshParams*/ )
     rcFreeHeightField(hf);
     rcFreeCompactHeightfield(chf);
     rcFreeContourSet(contours);
-    delete[] vertices;
-    delete[] triangles;
-    delete[] areas;
-    delete[] bmin;
-    delete[] bmax;
+    delete vertices;
+    delete triangles;
+    delete areas;
+    delete bmin;
+    delete bmax;
 
     if (!params.polyCount || !params.polys || Constants::TilesPerMap * Constants::TilesPerMap == params.polyCount)
     {
@@ -226,7 +226,7 @@ uint8* TileBuilder::BuildTiled(dtNavMeshParams& navMeshParams)
     adt->Read();
     _Geometry->AddAdt(adt);
     delete adt;
-    
+
     if (_Geometry->Vertices.empty() && _Geometry->Triangles.empty())
         return NULL;
 
@@ -234,7 +234,8 @@ uint8* TileBuilder::BuildTiled(dtNavMeshParams& navMeshParams)
     CalculateTileBounds(bmin, bmax, navMeshParams);
     _Geometry->CalculateMinMaxHeight(bmin[1], bmax[1]);
 
-    // again, we load everything - wasteful but who cares
+    // This is commented out to reduce the size of the resulting files (and the time it takes to generate them), we shouldn't need to load 4 more ADTs each time.
+    /*// again, we load everything - wasteful but who cares
     for (int ty = Y - 1; ty <= Y + 1; ty++)
     {
         for (int tx = X - 1; tx <= X + 1; tx++)
@@ -245,7 +246,7 @@ uint8* TileBuilder::BuildTiled(dtNavMeshParams& navMeshParams)
 
             ADT* _adt = new ADT(Utils::GetAdtPath(World, tx, ty), tx, ty);
             // If this condition is met, it means that this WDT does not contain the ADT
-            if (!_adt->Data->_Stream)
+            if (!_adt->Data->Stream)
             {
                 delete _adt;
                 continue;
@@ -254,7 +255,7 @@ uint8* TileBuilder::BuildTiled(dtNavMeshParams& navMeshParams)
             _Geometry->AddAdt(_adt);
             delete _adt;
         }
-    }
+    }*/
 
     OutputDebugVertices();
     
@@ -274,20 +275,20 @@ uint8* TileBuilder::BuildTiled(dtNavMeshParams& navMeshParams)
     bmax[2] += Config.borderSize * Config.cs;
 
     rcHeightfield* hf = rcAllocHeightfield();
-    int width = Constants::TileVoxelSize + (Config.borderSize * 2);
+    int width = Config.tileSize + (Config.borderSize * 2);
     rcCreateHeightfield(Context, *hf, width, width, bmin, bmax, Config.cs, Config.ch);
 
     rcClearUnwalkableTriangles(Context, Config.walkableSlopeAngle, vertices, numVerts, triangles, numTris, areas);
-    rcRasterizeTriangles(Context, vertices, numVerts, triangles, areas, numTris, *hf, ceilf(Config.walkableClimb / Config.ch));
+    rcRasterizeTriangles(Context, vertices, numVerts, triangles, areas, numTris, *hf, Config.walkableClimb);
 
-    rcFilterLowHangingWalkableObstacles(Context, ceilf(Config.walkableClimb / Config.ch), *hf);
-    rcFilterLedgeSpans(Context, ceilf(Config.walkableHeight / Config.ch), ceilf(Config.walkableClimb / Config.ch), *hf);
-    rcFilterWalkableLowHeightSpans(Context, ceilf(Config.walkableHeight / Config.ch), *hf);
+    rcFilterLowHangingWalkableObstacles(Context, Config.walkableClimb, *hf);
+    rcFilterLedgeSpans(Context, Config.walkableHeight, Config.walkableClimb, *hf);
+    rcFilterWalkableLowHeightSpans(Context, Config.walkableHeight, *hf);
 
     rcCompactHeightfield* chf = rcAllocCompactHeightfield();
-    rcBuildCompactHeightfield(Context, ceilf(Config.walkableHeight / Config.ch), ceilf(Config.walkableClimb / Config.ch), *hf, *chf);
+    rcBuildCompactHeightfield(Context, Config.walkableHeight, Config.walkableClimb, *hf, *chf);
 
-    rcErodeWalkableArea(Context, ceilf(Config.walkableRadius / Config.cs), *chf);
+    rcErodeWalkableArea(Context, Config.walkableRadius, *chf);
     rcBuildDistanceField(Context, *chf);
     rcBuildRegions(Context, *chf, Config.borderSize, Config.minRegionArea, Config.mergeRegionArea);
 
@@ -328,9 +329,9 @@ uint8* TileBuilder::BuildTiled(dtNavMeshParams& navMeshParams)
     // General settings
     params.ch = Config.ch;
     params.cs = Config.cs;
-    params.walkableClimb = Config.walkableClimb;
-    params.walkableHeight = Config.walkableHeight;
-    params.walkableRadius = Config.walkableRadius;
+    params.walkableClimb = Config.walkableClimb * Config.ch;
+    params.walkableHeight = Config.walkableHeight * Config.ch;
+    params.walkableRadius = Config.walkableRadius * Config.cs;
     params.tileX = X;
     params.tileY = Y;
     params.tileLayer = 0;
@@ -356,8 +357,6 @@ uint8* TileBuilder::BuildTiled(dtNavMeshParams& navMeshParams)
     delete[] areas;
     delete[] bmin;
     delete[] bmax;
-    delete[] bmin2;
-    delete[] bmax2;
 
     if (!params.polyCount || !params.polys || Constants::TilesPerMap * Constants::TilesPerMap == params.polyCount)
     {
@@ -388,12 +387,12 @@ uint8* TileBuilder::BuildTiled(dtNavMeshParams& navMeshParams)
     return NULL;
 }
 
-void TileBuilder::OutputDebugVertices() const
+void TileBuilder::OutputDebugVertices()
 {
     if (Constants::Debug)
     {
         char buff[100];
-        sprintf(buff, "mmaps/map%03u%02u%02u.obj", MapId, Y, X);
+        sprintf(buff, "mmaps/%s_%02u%02u.obj", World.c_str(), Y, X);
         FILE* debug = fopen(buff, "wb");
         for (uint32 i = 0; i < _Geometry->Vertices.size(); ++i)
         {

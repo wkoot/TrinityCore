@@ -31,7 +31,6 @@
 #endif
 
 const float Constants::TileSize = 533.0f + (1.0f / 3.0f);
-const float Constants::TileVoxelSize = 1800.0f;
 const float Constants::MaxXY = 32.0f * Constants::TileSize;
 const float Constants::ChunkSize = Constants::TileSize / 16.0f;
 const float Constants::UnitSize = Constants::ChunkSize / 8.0f;
@@ -55,9 +54,15 @@ void Utils::CreateDir( const std::string& Path )
 #endif
 }
 
-void Utils::Reverse(std::string& str)
+void Utils::Reverse(char word[])
 {
-    std::reverse(str.begin(), str.end());
+    int len = strlen(word);
+    for (int i = 0;i < len / 2; i++)
+    {
+        word[i] ^= word[len-i-1];
+        word[len-i-1] ^= word[i];
+        word[i] ^= word[len-i-1];
+    }
 }
 
 Vector3 Utils::ToRecast(const Vector3& val )
@@ -75,7 +80,7 @@ std::string Utils::FixModelPath(const std::string& path )
     return Utils::GetPathBase(path) + ".M2";
 }
 
-Vector3 Utils::TransformDoodadVertex(const IDefinition& def, Vector3 vec, bool translate)
+Vector3 Utils::TransformDoodadVertex(const IDefinition& def, Vector3& vec, bool translate)
 {
     // Sources of information:
     /// http://www.pxr.dk/wowdev/wiki/index.php?title=ADT/v18&oldid=3715
@@ -93,7 +98,7 @@ Vector3 Utils::TransformDoodadVertex(const IDefinition& def, Vector3 vec, bool t
     return ret;
 }
 
-Vector3 Utils::TransformWmoDoodad(const DoodadInstance& inst, const WorldModelDefinition& /*root*/, const Vector3& vec, bool translate)
+Vector3 Utils::TransformWmoDoodad(const DoodadInstance& inst, const WorldModelDefinition& /*root*/, Vector3& vec, bool translate )
 {
     G3D::Quat quat = G3D::Quat(-inst.QuatY, inst.QuatZ, -inst.QuatX, inst.QuatW);
 
@@ -124,9 +129,12 @@ std::string Utils::GetPathBase(const std::string& path )
     return path;
 }
 
-Vector3 Vector3::Read(Stream* file)
+Vector3 Vector3::Read( FILE* file )
 {
-    return file->Read<Vector3>();
+    Vector3 ret;
+    if (fread(&ret, sizeof(Vector3), 1, file) != 1)
+        printf("Vector3::Read: Failed to read some data expected 1, read 0\n");
+    return ret;
 }
 
 Vector3 Utils::GetLiquidVert(const IDefinition& def, Vector3 basePosition, float height, int x, int y, bool translate)
@@ -152,36 +160,41 @@ std::string Utils::Replace( std::string str, const std::string& oldStr, const st
     return str;
 }
 
-void Utils::SaveToDisk(Stream* stream, const std::string& path)
+void Utils::SaveToDisk( FILE* stream, const std::string& path )
 {
     FILE* disk = fopen(path.c_str(), "wb");
     if (!disk)
     {
         printf("SaveToDisk: Could not save file %s to disk, please verify that you have write permissions on that directory\n", path.c_str());
-        delete stream;
+        fclose(stream);
         return;
     }
 
-    uint32 size = stream->GetSize();
-    stream->Reset(); // Reset the stream just in case
-    
+    uint32 size = Utils::Size(stream);
+    uint8* data = new uint8[size];
     // Read the data to an array
-    char* data = stream->Read(size);
-   
+    size_t read = fread(data, size, 1, stream);
+    if (read != 1)
+    {
+        printf("SaveToDisk: Error reading from Stream while trying to save file %s to disk.\n", path.c_str());
+        fclose(disk);
+        fclose(stream);
+        return;
+    }
+    
     // And write it in the file
     size_t wrote = fwrite(data, size, 1, disk);
     if (wrote != 1)
     {
         printf("SaveToDisk: Error writing to the file while trying to save %s to disk.\n", path.c_str());
-        delete[] data;
-        delete stream;
+        fclose(stream);
         fclose(disk);
         return;
     }
 
     // Close the filestream
     fclose(disk);
-    delete stream;
+    fclose(stream);
 
     // Free the used memory
     delete[] data;
@@ -220,6 +233,7 @@ void MapChunkHeader::Read(Stream* stream)
     AreaId = stream->Read<uint32>();
     MapObjectRefs = stream->Read<uint32>();
     Holes = stream->Read<uint32>();
+    LowQualityTextureMap = new uint32[4];
     stream->Read(LowQualityTextureMap, sizeof(uint32) * 4);
     PredTex = stream->Read<uint32>();
     NumberEffectDoodad = stream->Read<uint32>();
@@ -233,6 +247,8 @@ void MapChunkHeader::Read(Stream* stream)
 
 void MHDR::Read(Stream* stream)
 {
+    int count = 0;
+
     Flags = stream->Read<uint32>();
     OffsetMCIN = stream->Read<uint32>();
     OffsetMTEX = stream->Read<uint32>();
@@ -304,20 +320,24 @@ void ModelHeader::Read(Stream* stream)
     OffsetBoundingNormals = stream->Read<uint32>();
 }
 
-void WorldModelHeader::Read(Stream* stream)
+WorldModelHeader WorldModelHeader::Read(Stream* stream)
 {
-    CountMaterials = stream->Read<uint32>();
-    CountGroups = stream->Read<uint32>();
-    CountPortals = stream->Read<uint32>();
-    CountLights = stream->Read<uint32>();
-    CountModels = stream->Read<uint32>();
-    CountDoodads = stream->Read<uint32>();
-    CountSets = stream->Read<uint32>();
-    AmbientColorUnk = stream->Read<uint32>();
-    WmoId = stream->Read<uint32>();
-    BoundingBox[0] = Vector3::Read(stream);
-    BoundingBox[1] = Vector3::Read(stream);
-    LiquidTypeRelated = stream->Read<uint32>();
+    WorldModelHeader ret;
+    int count = 0;
+    ret.CountMaterials = stream->Read<uint32>();
+    ret.CountGroups = stream->Read<uint32>();
+    ret.CountPortals = stream->Read<uint32>();
+    ret.CountLights = stream->Read<uint32>();
+    ret.CountModels = stream->Read<uint32>();
+    ret.CountDoodads = stream->Read<uint32>();
+    ret.CountSets = stream->Read<uint32>();
+    ret.AmbientColorUnk = stream->Read<uint32>();
+    ret.WmoId = stream->Read<uint32>();
+    ret.BoundingBox[0] = Vector3::Read(stream);
+    ret.BoundingBox[1] = Vector3::Read(stream);
+    ret.LiquidTypeRelated = stream->Read<uint32>();
+
+    return ret;
 }
 
 DoodadInstance DoodadInstance::Read(Stream* stream)
@@ -338,9 +358,8 @@ DoodadInstance DoodadInstance::Read(Stream* stream)
 DoodadSet DoodadSet::Read(Stream* stream)
 {
     DoodadSet ret;
-    char* name = stream->Read(20);
-    ret.Name = std::string(name, 20);
-    delete[] name;
+
+    ret.Name = std::string(stream->Read(20), 20);
     ret.FirstInstanceIndex = stream->Read<uint32>();
     ret.CountInstances = stream->Read<uint32>();
     ret.UnknownZero = stream->Read<uint32>();
@@ -375,7 +394,7 @@ void LiquidData::Read(Stream* stream, LiquidHeader& header)
     {
         for (uint32 x = 0; x < header.CountXVertices; x++)
         {
-            stream->Skip<uint32>();
+            stream->Read<uint32>(); // Dummy value
             HeightMap[x][y] = stream->Read<float>();
         }
     }
@@ -402,17 +421,6 @@ bool MCNKLiquidData::IsWater(int x, int y, float height)
     if (diff > Constants::MaxStandableHeight)
         return true;
     return false;
-}
-
-MCNKLiquidData::~MCNKLiquidData()
-{
-    if (!Heights)
-        return;
-
-    for (uint32 i = 0; i < 9; ++i)
-        delete[] Heights[i];
-    delete[] Heights;
-    Heights = NULL;
 }
 
 H2OHeader H2OHeader::Read(Stream* stream)
@@ -452,30 +460,24 @@ char* Utils::GetPlainName(const char* FileName)
     return (char*)FileName;
 }
 
-WMOGroupHeader WMOGroupHeader::Read(Stream* stream)
+WMOGroupHeader WMOGroupHeader::Read( FILE* stream )
 {
     WMOGroupHeader ret;
-    ret.OffsetGroupName = stream->Read<uint32>();
-    ret.OffsetDescriptiveName = stream->Read<uint32>();
-    ret.Flags = stream->Read<uint32>();
+    int count = 0;
+    count += fread(&ret.OffsetGroupName, sizeof(uint32), 1, stream);
+    count += fread(&ret.OffsetDescriptiveName, sizeof(uint32), 1, stream);
+    count += fread(&ret.Flags, sizeof(uint32), 1, stream);
     ret.BoundingBox[0] = Vector3::Read(stream);
     ret.BoundingBox[1] = Vector3::Read(stream);
-    ret.OffsetPortals = stream->Read<uint32>();
-    ret.CountPortals = stream->Read<uint32>();
-    stream->Read(ret.CountBatches, sizeof(uint16) * 4);
-    stream->Read(ret.Fogs, sizeof(uint8) * 4);
-    ret.LiquidTypeRelated = stream->Read<uint32>();
-    ret.WmoId = stream->Read<uint32>();
-    
-    return ret;
-}
+    count += fread(&ret.OffsetPortals, sizeof(uint32), 1, stream);
+    count += fread(&ret.CountPortals, sizeof(uint32), 1, stream);
+    count += fread(&ret.CountBatches, sizeof(uint16), 4, stream);
+    count += fread(&ret.Fogs, sizeof(uint8), 4, stream);
+    count += fread(&ret.LiquidTypeRelated, sizeof(uint32), 1, stream);
+    count += fread(&ret.WmoId, sizeof(uint32), 1, stream);
 
-void Utils::InitializeMmapTileHeader(MmapTileHeader& header)
-{
-    memset(&header, 0, sizeof(MmapTileHeader));
-    header.mmapMagic = MMAP_MAGIC;
-    header.dtVersion = DT_NAVMESH_VERSION;
-    header.mmapVersion = MMAP_VERSION;
-    header.size = 0;
-    header.usesLiquids = true;
+    if (count != 15)
+        printf("WMOGroupHeader::Read: Failed to read some data expected 15, read %d\n", count);
+
+    return ret;
 }

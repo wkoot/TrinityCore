@@ -149,7 +149,7 @@ World::~World()
         delete command;
 
     VMAP::VMapFactory::clear();
-    MMAP::MMapFactory::Clear();
+    MMAP::MMapFactory::clear();
 
     /// @todo free addSessQueue
 }

@@ -20,7 +20,6 @@
 
 #include "libmpq/mpq.h"
 #include "Define.h"
-#include "Stream.h"
 #include <string>
 #include <ctype.h>
 #include <vector>
@@ -31,15 +30,11 @@ class MPQArchive
 {
 
 public:
-    mpq_archive_s* mpq_a;
+    mpq_archive_s *mpq_a;
 
     std::vector<std::string> Files;
 
     MPQArchive(const char* filename);
-    ~MPQArchive()
-    {
-        close();
-    }
     void close();
 
     void GetFileListTo(std::vector<std::string>& filelist) {
@@ -75,8 +70,8 @@ class MPQFile
 {
     //MPQHANDLE handle;
     bool eof;
-    char* buffer;
-    libmpq__off_t pointer, size;
+    char *buffer;
+    libmpq__off_t pointer,size;
 
     // disable copying
     MPQFile(const MPQFile& /*f*/) {}
@@ -87,17 +82,17 @@ public:
     ~MPQFile() { close(); }
     size_t Read(void* dest, size_t bytes);
     Stream* GetFileStream();
-    size_t getSize() const { return size; }
-    size_t getPos() const { return pointer; }
+    size_t getSize() { return size; }
+    size_t getPos() { return pointer; }
     char* getBuffer() { return buffer; }
     char* getPointer() { return buffer + pointer; }
-    bool isEof() const { return eof; }
+    bool isEof() { return eof; }
     void seek(int offset);
     void seekRelative(int offset);
     void close();
 };
 
-inline void flipcc(char* fcc)
+inline void flipcc(char *fcc)
 {
     char t;
     t=fcc[0];

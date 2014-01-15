@@ -20,7 +20,7 @@
 #include "Chunk.h"
 #include "Utils.h"
 
-WorldModelGroup::WorldModelGroup(std::string path, int groupIndex) : SubData(NULL), GroupIndex(groupIndex), MOBA(NULL), MOBALength(0), HasLiquidData(false), IsBad(false)
+WorldModelGroup::WorldModelGroup(std::string path, int groupIndex) : SubData(NULL), GroupIndex(groupIndex), MOBA(NULL), MOBALength(0), IsBad(false), HasLiquidData(false)
 {
     Data = new ChunkedData(path);
     if (!Data->_Stream)
@@ -31,7 +31,7 @@ WorldModelGroup::WorldModelGroup(std::string path, int groupIndex) : SubData(NUL
     Load(path);
 }
 
-WorldModelGroup::WorldModelGroup(Stream* stream, std::string path, int groupIndex) : SubData(NULL), GroupIndex(groupIndex), MOBA(NULL), MOBALength(0), HasLiquidData(false), IsBad(false)
+WorldModelGroup::WorldModelGroup(Stream* stream, std::string path, int groupIndex) : SubData(NULL), GroupIndex(groupIndex), MOBA(NULL), MOBALength(0), IsBad(false), HasLiquidData(false)
 {
     Data = new ChunkedData(stream, stream->GetSize());
     Load(path);
@@ -39,10 +39,6 @@ WorldModelGroup::WorldModelGroup(Stream* stream, std::string path, int groupInde
 
 WorldModelGroup::~WorldModelGroup()
 {
-    // Temporarily delete the underlying stream, it is the same pointer for both Data and SubData.
-    // @TODO: Remove this code once the ChunkedData destructor properly releases _Stream
-    delete Data->_Stream;
-
     delete Data;
     delete SubData;
     delete[] MOBA;
@@ -58,8 +54,8 @@ void WorldModelGroup::Load(std::string& path)
 
     Name = Utils::GetPlainName(path.c_str());
 
-    Stream* stream = mainChunk->GetStream();
-    stream->Seek(firstSub, SEEK_SET);
+    FILE* stream = mainChunk->GetStream();
+    fseek(stream, firstSub, SEEK_SET);
     SubData = new ChunkedData(stream, mainChunk->Length - firstSub);
 
     ReadHeader();
@@ -80,7 +76,7 @@ void WorldModelGroup::ReadNormals()
     uint32 normalCount = chunk->Length / 12;
     ASSERT(normalCount == Vertices.size() && "normalCount is different than the Vertices count");
     Normals.reserve(normalCount);
-    Stream* stream = chunk->GetStream();
+    FILE* stream = chunk->GetStream();
     for (uint32 i = 0; i < normalCount; i++)
         Normals.push_back(Vector3::Read(stream));
 }
@@ -93,8 +89,8 @@ void WorldModelGroup::ReadLiquid()
 
     HasLiquidData = true;
     Stream* stream = chunk->GetStream();
-    LiquidDataHeader.Read(stream);
-    LiquidDataGeometry.Read(stream, LiquidDataHeader);
+    LiquidDataHeader = LiquidHeader::Read(stream);
+    LiquidDataGeometry = LiquidData::Read(stream, LiquidDataHeader);
 }
 
 void WorldModelGroup::ReadVertices()
@@ -105,7 +101,7 @@ void WorldModelGroup::ReadVertices()
 
     uint32 verticeCount = chunk->Length / 12;
     Vertices.reserve(verticeCount);
-    Stream* stream = chunk->GetStream();
+    FILE* stream = chunk->GetStream();
     for (uint32 i = 0; i < verticeCount; i++)
         Vertices.push_back(Vector3::Read(stream));
 }
@@ -118,13 +114,19 @@ void WorldModelGroup::ReadTriangles()
 
     uint32 triangleCount = chunk->Length / 6;
     ASSERT(triangleCount == TriangleFlags.size() && "triangleCount != TriangleFlags.size()");
-    Stream* stream = chunk->GetStream();
+    FILE* stream = chunk->GetStream();
     Triangles.reserve(triangleCount);
     for (uint32 i = 0; i < triangleCount; i++)
     {
-        uint16 v0 = stream->Read<uint16>();
-        uint16 v1 = stream->Read<uint16>();
-        uint16 v2 = stream->Read<uint16>();
+        uint16 v0;
+        uint16 v1;
+        uint16 v2;
+        int count = 0;
+        count += fread(&v0, sizeof(uint16), 1, stream);
+        count += fread(&v1, sizeof(uint16), 1, stream);
+        count += fread(&v2, sizeof(uint16), 1, stream);
+        if (count != 3)
+            printf("WorldModelGroup::ReadMaterials: Error reading data, expected 3, read %d\n", count);
 
         Triangles.push_back(Triangle<uint16>(Constants::TRIANGLE_TYPE_WMO, v0, v1, v2));
     }
@@ -136,15 +138,20 @@ void WorldModelGroup::ReadMaterials()
     if (!chunk)
         return;
 
-    Stream* stream = chunk->GetStream();
+    FILE* stream = chunk->GetStream();
     uint32 triangleCount = chunk->Length / 2;
     TriangleFlags.reserve(triangleCount);
     TriangleMaterials.reserve(triangleCount);
     for (uint32 i = 0; i < triangleCount; i++)
     {
-        TriangleFlags.push_back(stream->Read<uint8>());
+        uint8 tmp;
+        if (fread(&tmp, sizeof(uint8), 1, stream) != 1)
+            printf("WorldModelGroup::ReadMaterials: Error reading data, expected 1, read 0\n");
+        TriangleFlags.push_back(tmp);
         // Read again for material.
-        TriangleMaterials.push_back(stream->Read<uint8>());
+        if (fread(&tmp, sizeof(uint8), 1, stream) != 1)
+            printf("WorldModelGroup::ReadMaterials: Error reading data, expected 1, read 0\n");
+        TriangleMaterials.push_back(tmp);
     }
 }
 
@@ -154,7 +161,7 @@ void WorldModelGroup::ReadHeader()
     if (!chunk)
         return;
 
-    Stream* stream = chunk->GetStream();
+    FILE* stream = chunk->GetStream();
     Header = WMOGroupHeader::Read(stream);
 }
 
@@ -166,5 +173,7 @@ void WorldModelGroup::ReadBatches()
 
     MOBALength = chunk->Length / 2;
     MOBA = new uint16[MOBALength];
-    chunk->GetStream()->Read(MOBA, sizeof(uint16) * MOBALength);
+    uint32 count = (uint32)fread(MOBA, sizeof(uint16), MOBALength, chunk->GetStream());
+    if (count != MOBALength)
+        printf("WorldModelGroup::ReadBatches: Error reading data, expected %u, read %u\n", MOBALength, count);
 }

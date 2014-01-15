@@ -21,7 +21,7 @@
 
 DBC::DBC(Stream* stream) : StringBlock(NULL), StringBlockSize(0), IsFaulty(true)
 {
-    delete[] stream->Read(4); // Read the magic "WDBC"
+    stream->Read(4); // Read the magic "WDBC"
 
     RecordCount = stream->Read<int>();
     Records.reserve(RecordCount);
@@ -46,7 +46,6 @@ DBC::DBC(Stream* stream) : StringBlock(NULL), StringBlockSize(0), IsFaulty(true)
         }
     }
     StringBlock = (uint8*)stream->Read(StringBlockSize);
-    delete stream;
 }
 
 DBC::~DBC()
@@ -56,7 +55,7 @@ DBC::~DBC()
         delete *itr;
 }
 
-std::string DBC::GetStringByOffset( int offset ) const
+std::string DBC::GetStringByOffset( int offset )
 {
     int len = 0;
     for (uint32 i = offset; i < StringBlockSize; i++)
@@ -71,14 +70,14 @@ std::string DBC::GetStringByOffset( int offset ) const
     strcpy(d, (const char*)(StringBlock + offset));
     d[len] = '\0';
     std::string val = std::string(d);
-    delete[] d;
+    delete [] d;
     return val;
 }
 
-Record const* DBC::GetRecordById( int id ) const
+Record* DBC::GetRecordById( int id )
 {
     // we assume Id is index 0
-    for (std::vector<Record*>::const_iterator itr = Records.begin(); itr != Records.end(); ++itr)
+    for (std::vector<Record*>::iterator itr = Records.begin(); itr != Records.end(); ++itr)
         if ((*itr)->Values[0] == id)
             return *itr;
     return NULL;

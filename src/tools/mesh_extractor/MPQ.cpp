@@ -126,8 +126,15 @@ void MPQFile::close()
     eof = true;
 }
 
-Stream* MPQFile::GetFileStream()
+FILE* MPQFile::GetFileStream()
 {
-    Stream* stream = new Stream(buffer, size);
-    return stream;
+    FILE* file = tmpfile();
+    if (!file)
+    {
+        printf("Could not create temporary file. Please run as Administrator or root\n");
+        exit(1);
+    }
+    fwrite(buffer, sizeof(char), size, file);
+    fseek(file, 0, SEEK_SET);
+    return file;
 }
