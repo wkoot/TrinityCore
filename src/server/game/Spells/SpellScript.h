@@ -411,7 +411,7 @@ class SpellScript : public _SpellScript
         void PreventHitDefaultEffect(SpellEffIndex effIndex);
 
         // method avalible only in EffectHandler method
-        int32 GetEffectValue();
+        int32 GetEffectValue() const;
 
         // returns: cast item if present.
         Item* GetCastItem();
