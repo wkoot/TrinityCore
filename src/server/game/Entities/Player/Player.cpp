@@ -8796,7 +8796,7 @@ void Player::SendLoot(uint64 guid, LootType loot_type)
                 loot->FillLoot(lootid, LootTemplates_Gameobject, this, !groupRules, false, go->GetLootMode());
 
                 // get next RR player (for next loot)
-                if (groupRules)
+                if (groupRules && !go->loot.empty())
                     group->UpdateLooterGuid(go);
             }
 
@@ -8835,7 +8835,7 @@ void Player::SendLoot(uint64 guid, LootType loot_type)
                 switch (group->GetLootMethod())
                 {
                     case MASTER_LOOT:
-                        permission = MASTER_PERMISSION;
+                        permission = group->GetMasterLooterGuid() == GetGUID() ? MASTER_PERMISSION : RESTRICTED_PERMISSION;
                         break;
                     case FREE_FOR_ALL:
                         permission = ALL_PERMISSION;
@@ -9013,7 +9013,7 @@ void Player::SendLoot(uint64 guid, LootType loot_type)
                         switch (group->GetLootMethod())
                         {
                             case MASTER_LOOT:
-                                permission = MASTER_PERMISSION;
+                                permission = group->GetMasterLooterGuid() == GetGUID() ? MASTER_PERMISSION : RESTRICTED_PERMISSION;
                                 break;
                             case FREE_FOR_ALL:
                                 permission = ALL_PERMISSION;
@@ -17798,13 +17798,13 @@ bool Player::isAllowedToLoot(const Creature* creature)
         case FREE_FOR_ALL:
             return true;
         case ROUND_ROBIN:
-        case MASTER_LOOT:
             // may only loot if the player is the loot roundrobin player
             // or if there are free/quest/conditional item for the player
             if (loot->roundRobinPlayer == 0 || loot->roundRobinPlayer == GetGUID())
                 return true;
 
             return loot->hasItemFor(this);
+        case MASTER_LOOT:
         case GROUP_LOOT:
         case NEED_BEFORE_GREED:
             // may only loot if the player is the loot roundrobin player
@@ -22798,7 +22798,7 @@ void Player::SendInitialPacketsBeforeAddToMap()
     // SMSG_INSTANCE_DIFFICULTY
     data.Initialize(SMSG_INSTANCE_DIFFICULTY, 4+4);
     data << uint32(GetMap()->GetDifficulty());
-    data << uint32(0);
+    data << uint32(GetMap()->GetEntry()->IsDynamicDifficultyMap() && GetMap()->IsHeroic()); // Raid dynamic difficulty
     GetSession()->SendPacket(&data);
 
     SendInitialSpells();
