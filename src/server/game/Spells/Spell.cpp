@@ -571,6 +571,7 @@ m_caster((info->AttributesEx6 & SPELL_ATTR6_CAST_BY_CHARMER && caster->GetCharme
 
     m_CastItem = NULL;
     m_castItemGUID = 0;
+    m_castItemEntry = 0;
 
     unitTarget = NULL;
     itemTarget = NULL;
@@ -2806,9 +2807,15 @@ bool Spell::UpdateChanneledTargetList()
 void Spell::prepare(SpellCastTargets const* targets, AuraEffect const* triggeredByAura)
 {
     if (m_CastItem)
+    {
         m_castItemGUID = m_CastItem->GetGUID();
+        m_castItemEntry = m_CastItem->GetEntry();
+    }
     else
+    {
         m_castItemGUID = 0;
+        m_castItemEntry = 0;
+    }
 
     InitExplicitTargets(*targets);
 
@@ -4264,6 +4271,7 @@ void Spell::TakeCastItem()
 
         m_CastItem = NULL;
         m_castItemGUID = 0;
+        m_castItemEntry = 0;
     }
 }
 
@@ -4509,6 +4517,7 @@ void Spell::TakeReagents()
 
             m_CastItem = NULL;
             m_castItemGUID = 0;
+            m_castItemEntry = 0;
         }
 
         // if GetItemTarget is also spell reagent
@@ -6334,6 +6343,10 @@ bool Spell::UpdatePointers()
         m_CastItem = m_caster->ToPlayer()->GetItemByGuid(m_castItemGUID);
         // cast item not found, somehow the item is no longer where we expected
         if (!m_CastItem)
+            return false;
+
+        // check if the item is really the same, in case it has been wrapped for example
+        if (m_castItemEntry != m_CastItem->GetEntry())
             return false;
     }
 
