@@ -561,7 +561,7 @@ void GameObject::Update(uint32 diff)
                         CastSpell(NULL, goInfo->trap.spellId);
                         SetLootState(GO_JUST_DEACTIVATED);
                     }
-                    else if (Unit* target = Unit::GetUnit(*this, m_lootStateUnitGUID))
+                    else if (Unit* target = ObjectAccessor::GetUnit(*this, m_lootStateUnitGUID))
                     {
                         // Some traps do not have a spell but should be triggered
                         if (goInfo->trap.spellId)
@@ -1100,7 +1100,7 @@ void GameObject::UseDoorOrButton(uint32 time_to_restore, bool alternative /* = f
     SwitchDoorOrButton(true, alternative);
     SetLootState(GO_ACTIVATED, user);
 
-    m_cooldownTime = time(NULL) + time_to_restore;
+    m_cooldownTime = time_to_restore ? (time(NULL) + time_to_restore) : 0;
 }
 
 void GameObject::SetGoArtKit(uint8 kit)
