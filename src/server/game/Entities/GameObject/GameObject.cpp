@@ -1404,6 +1404,7 @@ void GameObject::Use(Unit* user)
                         // prevent removing GO at spell cancel
                         RemoveFromOwner();
                         SetOwnerGUID(player->GetGUID());
+                        SetSpellId(0); // prevent removing unintended auras at Unit::RemoveGameObject
 
                         /// @todo find reasonable value for fishing hole search
                         GameObject* ok = LookupFishingHoleAround(20.0f + CONTACT_DISTANCE);
@@ -2013,6 +2014,10 @@ void GameObject::SetLootState(LootState state, Unit* unit)
     m_lootStateUnitGUID = unit ? unit->GetGUID() : 0;
     AI()->OnStateChanged(state, unit);
     sScriptMgr->OnGameObjectLootStateChanged(this, state, unit);
+
+    if (GetGoType() == GAMEOBJECT_TYPE_DOOR) // only set collision for doors on SetGoState
+        return;
+
     if (m_model)
     {
         bool collision = false;

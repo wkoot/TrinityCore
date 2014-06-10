@@ -31,6 +31,7 @@
 #include <vector>
 #include <cstring>
 #include <time.h>
+#include <math.h>
 
 // Root of ByteBuffer exception hierarchy
 class ByteBufferException : public std::exception
@@ -241,12 +242,16 @@ class ByteBuffer
         ByteBuffer &operator>>(float &value)
         {
             value = read<float>();
+            if (!std::isfinite(value))
+                throw ByteBufferException();
             return *this;
         }
 
         ByteBuffer &operator>>(double &value)
         {
             value = read<double>();
+            if (!std::isfinite(value))
+                throw ByteBufferException();
             return *this;
         }
 
@@ -377,18 +382,18 @@ class ByteBuffer
             return *this;
         }
 
-        uint8 * contents() 
-        { 
+        uint8 * contents()
+        {
             if (_storage.empty())
                 throw ByteBufferException();
-            return &_storage[0]; 
+            return &_storage[0];
         }
 
-        const uint8 *contents() const 
-        { 
+        const uint8 *contents() const
+        {
             if (_storage.empty())
                 throw ByteBufferException();
-            return &_storage[0]; 
+            return &_storage[0];
         }
 
         size_t size() const { return _storage.size(); }
