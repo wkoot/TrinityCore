@@ -2131,11 +2131,9 @@ bool Player::TeleportTo(uint32 mapid, float x, float y, float z, float orientati
     {
         TC_LOG_DEBUG("maps", "Player %s using client without required expansion tried teleport to non accessible map %u", GetName().c_str(), mapid);
 
-        if (GetTransport())
+        if (Transport* transport = GetTransport())
         {
-            m_transport->RemovePassenger(this);
-            m_transport = NULL;
-            m_movementInfo.transport.Reset();
+            transport->RemovePassenger(this);
             RepopAtGraveyard();                             // teleport to near graveyard if on transport, looks blizz like :)
         }
 
@@ -2153,16 +2151,12 @@ bool Player::TeleportTo(uint32 mapid, float x, float y, float z, float orientati
     SetUnitMovementFlags(GetUnitMovementFlags() & MOVEMENTFLAG_MASK_HAS_PLAYER_STATUS_OPCODE);
     DisableSpline();
 
-    if (m_transport)
+    if (Transport* transport = GetTransport())
     {
         if (options & TELE_TO_NOT_LEAVE_TRANSPORT)
             AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT);
         else
-        {
-            m_transport->RemovePassenger(this);
-            m_transport = NULL;
-            m_movementInfo.transport.Reset();
-        }
+            transport->RemovePassenger(this);
     }
 
     // The player was ported to another map and loses the duel immediately.
@@ -2297,8 +2291,8 @@ bool Player::TeleportTo(uint32 mapid, float x, float y, float z, float orientati
                 // send transfer packets
                 WorldPacket data(SMSG_TRANSFER_PENDING, 4 + 4 + 4);
                 data << uint32(mapid);
-                if (m_transport)
-                    data << m_transport->GetEntry() << GetMapId();
+                if (Transport* transport = GetTransport())
+                    data << transport->GetEntry() << GetMapId();
 
                 GetSession()->SendPacket(&data);
             }
@@ -2316,7 +2310,7 @@ bool Player::TeleportTo(uint32 mapid, float x, float y, float z, float orientati
             {
                 WorldPacket data(SMSG_NEW_WORLD, 4 + 4 + 4 + 4 + 4);
                 data << uint32(mapid);
-                if (m_transport)
+                if (GetTransport())
                     data << m_movementInfo.transport.pos.PositionXYZOStream();
                 else
                     data << m_teleport_dest.PositionXYZOStream();
@@ -8790,7 +8784,7 @@ void Player::SendLoot(uint64 guid, LootType loot_type)
 
         // not check distance for GO in case owned GO (fishing bobber case, for example)
         // And permit out of range GO with no owner in case fishing hole
-        if (!go || (loot_type != LOOT_FISHINGHOLE && (loot_type != LOOT_FISHING || go->GetOwnerGUID() != GetGUID()) && !go->IsWithinDistInMap(this, INTERACTION_DISTANCE)) || (loot_type == LOOT_CORPSE && go->GetRespawnTime() && go->isSpawnedByDefault()))
+        if (!go || (loot_type != LOOT_FISHINGHOLE && ((loot_type != LOOT_FISHING && loot_type != LOOT_FISHING_JUNK) || go->GetOwnerGUID() != GetGUID()) && !go->IsWithinDistInMap(this, INTERACTION_DISTANCE)) || (loot_type == LOOT_CORPSE && go->GetRespawnTime() && go->isSpawnedByDefault()))
         {
             SendLootRelease(guid);
             return;
@@ -8828,6 +8822,8 @@ void Player::SendLoot(uint64 guid, LootType loot_type)
 
             if (loot_type == LOOT_FISHING)
                 go->getFishLoot(loot, this);
+            else if (loot_type == LOOT_FISHING_JUNK)
+                go->getFishLootJunk(loot, this);
 
             if (go->GetGOInfo()->type == GAMEOBJECT_TYPE_CHEST && go->GetGOInfo()->chest.groupLootRules)
             {
@@ -9070,6 +9066,7 @@ void Player::SendLoot(uint64 guid, LootType loot_type)
     {
         case LOOT_INSIGNIA:    loot_type = LOOT_SKINNING; break;
         case LOOT_FISHINGHOLE: loot_type = LOOT_FISHING; break;
+        case LOOT_FISHING_JUNK: loot_type = LOOT_FISHING; break;
         default: break;
     }
 
@@ -17398,15 +17395,15 @@ bool Player::LoadFromDB(uint32 guid, SQLQueryHolder *holder)
     {
         uint64 transGUID = MAKE_NEW_GUID(transLowGUID, 0, HIGHGUID_MO_TRANSPORT);
 
+        Transport* transport = NULL;
         if (GameObject* go = HashMapHolder<GameObject>::Find(transGUID))
-            m_transport = go->ToTransport();
+            transport = go->ToTransport();
 
-        if (m_transport)
+        if (transport)
         {
-            m_movementInfo.transport.guid = transGUID;
             float x = fields[26].GetFloat(), y = fields[27].GetFloat(), z = fields[28].GetFloat(), o = fields[29].GetFloat();
             m_movementInfo.transport.pos.Relocate(x, y, z, o);
-            m_transport->CalculatePassengerPosition(x, y, z, &o);
+            transport->CalculatePassengerPosition(x, y, z, &o);
 
             if (!Trinity::IsValidMapCoord(x, y, z, o) ||
                 // transport size limited
@@ -17417,7 +17414,6 @@ bool Player::LoadFromDB(uint32 guid, SQLQueryHolder *holder)
                 TC_LOG_ERROR("entities.player", "Player (guidlow %d) have invalid transport coordinates (X: %f Y: %f Z: %f O: %f). Teleport to bind location.",
                     guid, x, y, z, o);
 
-                m_transport = NULL;
                 m_movementInfo.transport.Reset();
 
                 RelocateToHomebind();
@@ -17425,10 +17421,9 @@ bool Player::LoadFromDB(uint32 guid, SQLQueryHolder *holder)
             else
             {
                 Relocate(x, y, z, o);
-                mapId = m_transport->GetMapId();
+                mapId = transport->GetMapId();
 
-                m_transport->AddPassenger(this);
-                AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT);
+                transport->AddPassenger(this);
             }
         }
         else
