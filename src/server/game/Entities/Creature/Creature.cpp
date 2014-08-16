@@ -384,9 +384,9 @@ bool Creature::UpdateEntry(uint32 entry, CreatureData const* data /*= nullptr*/)
 
     RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IN_COMBAT);
 
-    SetAttackTime(BASE_ATTACK,   cInfo->baseattacktime);
-    SetAttackTime(OFF_ATTACK,    cInfo->baseattacktime);
-    SetAttackTime(RANGED_ATTACK, cInfo->rangeattacktime);
+    SetAttackTime(BASE_ATTACK,   cInfo->BaseAttackTime);
+    SetAttackTime(OFF_ATTACK,    cInfo->BaseAttackTime);
+    SetAttackTime(RANGED_ATTACK, cInfo->RangeAttackTime);
 
     SelectLevel();
 
@@ -546,15 +546,6 @@ void Creature::Update(uint32 diff)
             // CORPSE/DEAD state will processed at next tick (in other case death timer will be updated unexpectedly)
             if (!IsAlive())
                 break;
-
-            time_t now = time(NULL);
-
-            // Check if we should refill the pickpocketing loot
-            if (loot.loot_type == LOOT_PICKPOCKETING && _pickpocketLootRestore && _pickpocketLootRestore <= now)
-            {
-                loot.clear();
-                _pickpocketLootRestore = 0;
-            }
 
             if (m_regenTimer > 0)
             {
@@ -824,7 +815,7 @@ bool Creature::Create(uint32 guidlow, Map* map, uint32 phaseMask, uint32 entry, 
 
 void Creature::InitializeReactState()
 {
-    if (IsTotem() || IsTrigger() || GetCreatureType() == CREATURE_TYPE_CRITTER || IsSpiritService())
+    if (IsTotem() || IsTrigger() || IsCritter() || IsSpiritService())
         SetReactState(REACT_PASSIVE);
     /*
     else if (IsCivilian())
@@ -1531,7 +1522,7 @@ void Creature::Respawn(bool force)
         TC_LOG_DEBUG("entities.unit", "Respawning creature %s (GuidLow: %u, Full GUID: " UI64FMTD " Entry: %u)",
             GetName().c_str(), GetGUIDLow(), GetGUID(), GetEntry());
         m_respawnTime = 0;
-        _pickpocketLootRestore = 0;
+        ResetPickPocketRefillTimer();
         loot.clear();
         if (m_originalEntry != GetEntry())
             UpdateEntry(m_originalEntry);
@@ -1647,7 +1638,7 @@ bool Creature::isWorldBoss() const
     if (IsPet())
         return false;
 
-    return GetCreatureTemplate()->type_flags & CREATURE_TYPEFLAGS_BOSS;
+    return (GetCreatureTemplate()->type_flags & CREATURE_TYPEFLAGS_BOSS) != 0;
 }
 
 SpellInfo const* Creature::reachWithSpellAttack(Unit* victim)

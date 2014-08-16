@@ -48,8 +48,8 @@
 #include "MovementPacketBuilder.h"
 #include "DynamicTree.h"
 #include "Group.h"
-#include "Battlefield.h"
 #include "BattlefieldMgr.h"
+#include "Battleground.h"
 #include "Chat.h"
 
 uint32 GuidHigh2TypeId(uint32 guid_hi)
@@ -119,7 +119,7 @@ Object::~Object()
     }
 
     delete [] m_uint32Values;
-    m_uint32Values = 0;
+    m_uint32Values = nullptr;
 }
 
 void Object::_InitValues()
@@ -343,7 +343,7 @@ void Object::BuildMovementUpdate(ByteBuffer* data, uint16 flags) const
     if (isType(TYPEMASK_UNIT))
         unit = ToUnit();
     else
-        object = ((WorldObject*)this);
+        object = (WorldObject const*)this;
 
     *data << uint16(flags);                                  // update flags
 
@@ -548,7 +548,7 @@ void Object::BuildFieldsUpdate(Player* player, UpdateDataMapType& data_map) cons
 
     if (iter == data_map.end())
     {
-        std::pair<UpdateDataMapType::iterator, bool> p = data_map.insert(UpdateDataMapType::value_type(player, UpdateData()));
+        std::pair<UpdateDataMapType::iterator, bool> p = data_map.emplace(player, UpdateData());
         ASSERT(p.second);
         iter = p.first;
     }
@@ -568,7 +568,7 @@ uint32 Object::GetUpdateFieldData(Player const* target, uint32*& flags) const
         case TYPEID_ITEM:
         case TYPEID_CONTAINER:
             flags = ItemUpdateFieldFlags;
-            if (((Item*)this)->GetOwnerGUID() == target->GetGUID())
+            if (((Item const*)this)->GetOwnerGUID() == target->GetGUID())
                 visibleFlag |= UF_FLAG_OWNER | UF_FLAG_ITEM_OWNER;
             break;
         case TYPEID_UNIT:
@@ -594,7 +594,7 @@ uint32 Object::GetUpdateFieldData(Player const* target, uint32*& flags) const
             break;
         case TYPEID_DYNAMICOBJECT:
             flags = DynamicObjectUpdateFieldFlags;
-            if (((DynamicObject*)this)->GetCasterGUID() == target->GetGUID())
+            if (ToDynObject()->GetCasterGUID() == target->GetGUID())
                 visibleFlag |= UF_FLAG_OWNER;
             break;
         case TYPEID_CORPSE:
@@ -2635,7 +2635,6 @@ void WorldObject::MovePositionToFirstCollision(Position &pos, float dist, float 
     float destx, desty, destz;
     destx = pos.m_positionX + dist * std::cos(angle);
     desty = pos.m_positionY + dist * std::sin(angle);
-    destz = NormalizeZforCollision(this, destx, desty, pos.GetPositionZ());
 
     // Prevent invalid coordinates here, position is unchanged
     if (!Trinity::IsValidMapCoord(destx, desty))
@@ -2644,6 +2643,7 @@ void WorldObject::MovePositionToFirstCollision(Position &pos, float dist, float 
         return;
     }
 
+    destz = NormalizeZforCollision(this, destx, desty, pos.GetPositionZ());
     bool col = VMAP::VMapFactory::createOrGetVMapManager()->getObjectHitPos(GetMapId(), pos.m_positionX, pos.m_positionY, pos.m_positionZ + 0.5f, destx, desty, destz + 0.5f, destx, desty, destz, -0.5f);
 
     // collision occured

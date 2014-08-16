@@ -478,7 +478,7 @@ void Spell::EffectSchoolDMG(SpellEffIndex effIndex)
                             int chance = (*i)->GetSpellInfo()->Effects[EFFECT_1].CalcValue(m_caster);
                             if (roll_chance_i(chance))
                                 // Mind Trauma
-                                m_caster->CastSpell(unitTarget, 48301, true, 0);
+                                m_caster->CastSpell(unitTarget, 48301, true, nullptr);
                             break;
                         }
                     }
@@ -625,8 +625,13 @@ void Spell::EffectSchoolDMG(SpellEffIndex effIndex)
                 // Hammer of the Righteous
                 if (m_spellInfo->SpellFamilyFlags[1]&0x00040000)
                 {
+                    float min_damage = m_caster->GetFloatValue(UNIT_FIELD_MINDAMAGE);
+                    float max_damage = m_caster->GetFloatValue(UNIT_FIELD_MAXDAMAGE);
+                    if (Player* player = m_caster->ToPlayer()) // UNIT_FIELD_MINDAMAGE/MAXDAMAGE already include damage bonuses, so try to get them without damage bonuses
+                        player->CalculateMinMaxDamage(BASE_ATTACK, false, false, min_damage, max_damage);
+
+                    float average = (min_damage + max_damage) / 2;
                     // Add main hand dps * effect[2] amount
-                    float average = (m_caster->GetFloatValue(UNIT_FIELD_MINDAMAGE) + m_caster->GetFloatValue(UNIT_FIELD_MAXDAMAGE)) / 2;
                     int32 count = m_caster->CalculateSpellDamage(unitTarget, m_spellInfo, EFFECT_2);
                     damage += count * int32(average * IN_MILLISECONDS) / m_caster->GetAttackTime(BASE_ATTACK);
                     break;
@@ -974,10 +979,14 @@ void Spell::EffectForceCast(SpellEffIndex effIndex)
             case 52349: // Overtake
                 unitTarget->CastCustomSpell(unitTarget, spellInfo->Id, &damage, NULL, NULL, true, NULL, NULL, m_originalCasterGUID);
                 return;
-            case 72299: // Malleable Goo Summon Trigger
-                unitTarget->CastSpell(unitTarget, spellInfo->Id, true, NULL, NULL, m_originalCasterGUID);
-                return;
         }
+    }
+
+    switch (spellInfo->Id)
+    {
+        case 72298: // Malleable Goo Summon
+            unitTarget->CastSpell(unitTarget, spellInfo->Id, true, NULL, NULL, m_originalCasterGUID);
+            return;
     }
 
     CustomSpellValues values;
@@ -2224,6 +2233,7 @@ void Spell::EffectSummonType(SpellEffIndex effIndex)
         case 1562:
         case 833:
         case 1161:
+        case 713:
             numSummons = (damage > 0) ? damage : 1;
             break;
         default:
@@ -3760,7 +3770,7 @@ void Spell::EffectScriptEffect(SpellEffIndex effIndex)
                         return;
 
                     uint32 spellId = 0;
-                    switch (rand() % 4)
+                    switch (rand32() % 4)
                     {
                         case 0: spellId = 46740; break;
                         case 1: spellId = 46739; break;
@@ -5341,7 +5351,7 @@ void Spell::EffectStealBeneficialBuff(SpellEffIndex effIndex)
             // The charges / stack amounts don't count towards the total number of auras that can be dispelled.
             // Ie: A dispel on a target with 5 stacks of Winters Chill and a Polymorph has 1 / (1 + 1) -> 50% chance to dispell
             // Polymorph instead of 1 / (5 + 1) -> 16%.
-            bool dispel_charges = aura->GetSpellInfo()->AttributesEx7 & SPELL_ATTR7_DISPEL_CHARGES;
+            bool dispel_charges = (aura->GetSpellInfo()->AttributesEx7 & SPELL_ATTR7_DISPEL_CHARGES) != 0;
             uint8 charges = dispel_charges ? aura->GetCharges() : aura->GetStackAmount();
             if (charges > 0)
                 steal_list.push_back(std::make_pair(aura, charges));
