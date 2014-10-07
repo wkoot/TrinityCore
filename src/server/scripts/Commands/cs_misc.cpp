@@ -181,9 +181,8 @@ public:
 
         GridCoord gridCoord = Trinity::ComputeGridCoord(object->GetPositionX(), object->GetPositionY());
 
-        // 63? WHY?
-        int gridX = 63 - gridCoord.x_coord;
-        int gridY = 63 - gridCoord.y_coord;
+        int gridX = (MAX_NUMBER_OF_GRIDS - 1) - gridCoord.x_coord;
+        int gridY = (MAX_NUMBER_OF_GRIDS - 1) - gridCoord.y_coord;
 
         uint32 haveMap = Map::ExistMap(mapId, gridX, gridY) ? 1 : 0;
         uint32 haveVMap = Map::ExistVMap(mapId, gridX, gridY) ? 1 : 0;
@@ -199,10 +198,12 @@ public:
         else
             handler->PSendSysMessage(LANG_GPS_NO_VMAP);
 
+        char const* unknown = handler->GetTrinityString(LANG_UNKNOWN);
+
         handler->PSendSysMessage(LANG_MAP_POSITION,
-            mapId, (mapEntry ? mapEntry->name[handler->GetSessionDbcLocale()] : handler->GetTrinityString(LANG_UNKNOWN)),
-            zoneId, (zoneEntry ? zoneEntry->area_name[handler->GetSessionDbcLocale()] : handler->GetTrinityString(LANG_UNKNOWN)),
-            areaId, (areaEntry ? areaEntry->area_name[handler->GetSessionDbcLocale()] : handler->GetTrinityString(LANG_UNKNOWN)),
+            mapId, (mapEntry ? mapEntry->name[handler->GetSessionDbcLocale()] : unknown),
+            zoneId, (zoneEntry ? zoneEntry->area_name[handler->GetSessionDbcLocale()] : unknown),
+            areaId, (areaEntry ? areaEntry->area_name[handler->GetSessionDbcLocale()] : unknown),
             object->GetPhaseMask(),
             object->GetPositionX(), object->GetPositionY(), object->GetPositionZ(), object->GetOrientation(),
             cell.GridX(), cell.GridY(), cell.CellX(), cell.CellY(), object->GetInstanceId(),
@@ -1711,7 +1712,9 @@ public:
         }
 
         if (target)
-            handler->PSendSysMessage(LANG_PINFO_CHR_MAP, map->name[locale], (!zoneName.empty() ? zoneName.c_str() : handler->GetTrinityString(LANG_UNKNOWN)), (!areaName.empty() ? areaName.c_str() : handler->GetTrinityString(LANG_UNKNOWN)));
+            handler->PSendSysMessage(LANG_PINFO_CHR_MAP, map->name[locale],
+                (!zoneName.empty() ? zoneName.c_str() : handler->GetTrinityString(LANG_UNKNOWN)),
+                (!areaName.empty() ? areaName.c_str() : handler->GetTrinityString(LANG_UNKNOWN)));
 
         // Output XVII. - XVIX. if they are not empty
         if (!guildName.empty())
@@ -2187,7 +2190,7 @@ public:
     {
         Player* target = NULL;
 
-        if (args && strlen(args) > 0)
+        if (args && args[0] != '\0')
         {
             target = sObjectAccessor->FindPlayerByName(args);
             if (!target)
