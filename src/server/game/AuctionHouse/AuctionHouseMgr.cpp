@@ -93,7 +93,7 @@ void AuctionHouseMgr::SendAuctionWonMail(AuctionEntry* auction, SQLTransaction& 
 
     uint32 bidderAccId = 0;
     ObjectGuid bidderGuid(HIGHGUID_PLAYER, auction->bidder);
-    Player* bidder = ObjectAccessor::FindPlayer(bidderGuid);
+    Player* bidder = ObjectAccessor::FindConnectedPlayer(bidderGuid);
     // data for gm.log
     std::string bidderName;
     bool logGmTrade = false;
@@ -157,7 +157,7 @@ void AuctionHouseMgr::SendAuctionWonMail(AuctionEntry* auction, SQLTransaction& 
 void AuctionHouseMgr::SendAuctionSalePendingMail(AuctionEntry* auction, SQLTransaction& trans)
 {
     ObjectGuid owner_guid(HIGHGUID_PLAYER, auction->owner);
-    Player* owner = ObjectAccessor::FindPlayer(owner_guid);
+    Player* owner = ObjectAccessor::FindConnectedPlayer(owner_guid);
     uint32 owner_accId = sObjectMgr->GetPlayerAccountIdByGUID(owner_guid);
     // owner exist (online or offline)
     if (owner || owner_accId)
@@ -169,7 +169,7 @@ void AuctionHouseMgr::SendAuctionSalePendingMail(AuctionEntry* auction, SQLTrans
 void AuctionHouseMgr::SendAuctionSuccessfulMail(AuctionEntry* auction, SQLTransaction& trans)
 {
     ObjectGuid owner_guid(HIGHGUID_PLAYER, auction->owner);
-    Player* owner = ObjectAccessor::FindPlayer(owner_guid);
+    Player* owner = ObjectAccessor::FindConnectedPlayer(owner_guid);
     uint32 owner_accId = sObjectMgr->GetPlayerAccountIdByGUID(owner_guid);
     // owner exist
     if (owner || owner_accId)
@@ -200,7 +200,7 @@ void AuctionHouseMgr::SendAuctionExpiredMail(AuctionEntry* auction, SQLTransacti
         return;
 
     ObjectGuid owner_guid(HIGHGUID_PLAYER, auction->owner);
-    Player* owner = ObjectAccessor::FindPlayer(owner_guid);
+    Player* owner = ObjectAccessor::FindConnectedPlayer(owner_guid);
     uint32 owner_accId = sObjectMgr->GetPlayerAccountIdByGUID(owner_guid);
     // owner exist
     if (owner || owner_accId)
@@ -223,7 +223,7 @@ void AuctionHouseMgr::SendAuctionExpiredMail(AuctionEntry* auction, SQLTransacti
 void AuctionHouseMgr::SendAuctionOutbiddedMail(AuctionEntry* auction, uint32 newPrice, Player* newBidder, SQLTransaction& trans)
 {
     ObjectGuid oldBidder_guid(HIGHGUID_PLAYER, auction->bidder);
-    Player* oldBidder = ObjectAccessor::FindPlayer(oldBidder_guid);
+    Player* oldBidder = ObjectAccessor::FindConnectedPlayer(oldBidder_guid);
 
     uint32 oldBidder_accId = 0;
     if (!oldBidder)
@@ -245,7 +245,7 @@ void AuctionHouseMgr::SendAuctionOutbiddedMail(AuctionEntry* auction, uint32 new
 void AuctionHouseMgr::SendAuctionCancelledToBidderMail(AuctionEntry* auction, SQLTransaction& trans)
 {
     ObjectGuid bidder_guid = ObjectGuid(HIGHGUID_PLAYER, auction->bidder);
-    Player* bidder = ObjectAccessor::FindPlayer(bidder_guid);
+    Player* bidder = ObjectAccessor::FindConnectedPlayer(bidder_guid);
 
     uint32 bidder_accId = 0;
     if (!bidder)
@@ -432,7 +432,7 @@ void AuctionHouseObject::AddAuction(AuctionEntry* auction)
     sScriptMgr->OnAuctionAdd(this, auction);
 }
 
-bool AuctionHouseObject::RemoveAuction(AuctionEntry* auction, uint32 /*itemEntry*/)
+bool AuctionHouseObject::RemoveAuction(AuctionEntry* auction)
 {
     bool wasInMap = AuctionsMap.erase(auction->Id) ? true : false;
 
@@ -454,22 +454,19 @@ void AuctionHouseObject::Update()
     if (AuctionsMap.empty())
         return;
 
-    PreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_AUCTION_BY_TIME);
-    stmt->setUInt32(0, (uint32)curTime+60);
-    PreparedQueryResult result = CharacterDatabase.Query(stmt);
 
-    if (!result)
-        return;
+    SQLTransaction trans = CharacterDatabase.BeginTransaction();
 
-    do
+    for (AuctionEntryMap::iterator it = AuctionsMap.begin(); it != AuctionsMap.end();)
     {
         // from auctionhousehandler.cpp, creates auction pointer & player pointer
-        AuctionEntry* auction = GetAuction(result->Fetch()->GetUInt32());
+        AuctionEntry* auction = it->second;
+        // Increment iterator due to AuctionEntry deletion
+        ++it;
 
-        if (!auction)
+        ///- filter auctions expired on next update
+        if (auction->expire_time > curTime + 60)
             continue;
-
-        SQLTransaction trans = CharacterDatabase.BeginTransaction();
 
         ///- Either cancel the auction if there was no bidder
         if (auction->bidder == 0)
@@ -488,16 +485,15 @@ void AuctionHouseObject::Update()
             sScriptMgr->OnAuctionSuccessful(this, auction);
         }
 
-        uint32 itemEntry = auction->itemEntry;
-
         ///- In any case clear the auction
         auction->DeleteFromDB(trans);
-        CharacterDatabase.CommitTransaction(trans);
 
         sAuctionMgr->RemoveAItem(auction->itemGUIDLow);
-        RemoveAuction(auction, itemEntry);
+        RemoveAuction(auction);
     }
-    while (result->NextRow());
+
+    // Run DB changes
+    CharacterDatabase.CommitTransaction(trans);
 }
 
 void AuctionHouseObject::BuildListBidderItems(WorldPacket& data, Player* player, uint32& count, uint32& totalcount)
@@ -592,22 +588,31 @@ void AuctionHouseObject::BuildListAuctionItems(WorldPacket& data, Player* player
             if (propRefID)
             {
                 // Append the suffix to the name (ie: of the Monkey) if one exists
-                // These are found in ItemRandomProperties.dbc, not ItemRandomSuffix.dbc
+                // These are found in ItemRandomSuffix.dbc and ItemRandomProperties.dbc
                 //  even though the DBC names seem misleading
-                const ItemRandomPropertiesEntry* itemRandProp = sItemRandomPropertiesStore.LookupEntry(propRefID);
 
-                if (itemRandProp)
+                char* const* suffix = nullptr;
+
+                if (propRefID < 0)
                 {
-                    char* const* temp = itemRandProp->nameSuffix;
+                    const ItemRandomSuffixEntry* itemRandSuffix = sItemRandomSuffixStore.LookupEntry(-propRefID);
+                    if (itemRandSuffix)
+                        suffix = itemRandSuffix->nameSuffix;
+                }
+                else
+                {
+                    const ItemRandomPropertiesEntry* itemRandProp = sItemRandomPropertiesStore.LookupEntry(propRefID);
+                    if (itemRandProp)
+                        suffix = itemRandProp->nameSuffix;
+                }
 
-                    // dbc local name
-                    if (temp)
-                    {
-                        // Append the suffix (ie: of the Monkey) to the name using localization
-                        // or default enUS if localization is invalid
-                        name += ' ';
-                        name += temp[locdbc_idx >= 0 ? locdbc_idx : LOCALE_enUS];
-                    }
+                // dbc local name
+                if (suffix)
+                {
+                    // Append the suffix (ie: of the Monkey) to the name using localization
+                    // or default enUS if localization is invalid
+                    name += ' ';
+                    name += suffix[locdbc_idx >= 0 ? locdbc_idx : LOCALE_enUS];
                 }
             }
 
