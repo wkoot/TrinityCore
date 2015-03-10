@@ -4218,7 +4218,7 @@ void Player::RemoveSpellCategoryCooldown(uint32 cat, bool update /* = false */)
 
 void Player::RemoveArenaSpellCooldowns(bool removeActivePetCooldowns)
 {
-    // remove cooldowns on spells that have <= 10 min CD
+    // remove cooldowns on spells that have < 10 min CD
 
     SpellCooldowns::iterator itr, next;
     for (itr = m_spellCooldowns.begin(); itr != m_spellCooldowns.end(); itr = next)
@@ -4226,10 +4226,10 @@ void Player::RemoveArenaSpellCooldowns(bool removeActivePetCooldowns)
         next = itr;
         ++next;
         SpellInfo const* entry = sSpellMgr->GetSpellInfo(itr->first);
-        // check if spellentry is present and if the cooldown is less or equal to 10 min
+        // check if spellentry is present and if the cooldown is less than 10 min
         if (entry &&
-            entry->RecoveryTime <= 10 * MINUTE * IN_MILLISECONDS &&
-            entry->CategoryRecoveryTime <= 10 * MINUTE * IN_MILLISECONDS)
+            entry->RecoveryTime < 10 * MINUTE * IN_MILLISECONDS &&
+            entry->CategoryRecoveryTime < 10 * MINUTE * IN_MILLISECONDS)
         {
             // remove & notify
             RemoveSpellCooldown(itr->first, true);
@@ -5002,7 +5002,7 @@ void Player::DeleteOldCharacters()
  */
 void Player::DeleteOldCharacters(uint32 keepDays)
 {
-    TC_LOG_INFO("entities.player", "Player::DeleteOldChars: Deleting all characters which have been deleted %u days before...", keepDays);
+    TC_LOG_INFO("entities.player", "Player::DeleteOldChars: Removing characters older than %u day(s)", keepDays);
 
     PreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_CHAR_OLD_CHARS);
     stmt->setUInt32(0, uint32(time(NULL) - time_t(keepDays * DAY)));
@@ -5010,7 +5010,7 @@ void Player::DeleteOldCharacters(uint32 keepDays)
 
     if (result)
     {
-         TC_LOG_DEBUG("entities.player", "Player::DeleteOldChars: Found " UI64FMTD " character(s) to delete", result->GetRowCount());
+         TC_LOG_DEBUG("entities.player", "Player::DeleteOldChars: " UI64FMTD " character(s) to remove", result->GetRowCount());
          do
          {
             Field* fields = result->Fetch();
@@ -6636,20 +6636,20 @@ void Player::SendActionButtons(uint32 state) const
     }
 
     GetSession()->SendPacket(&data);
-    TC_LOG_INFO("network", "SMSG_ACTION_BUTTONS sent '%u' spec '%u' Sent", GetGUIDLow(), m_activeSpec);
+    TC_LOG_DEBUG("network", "SMSG_ACTION_BUTTONS sent '%u' spec '%u' Sent", GetGUIDLow(), m_activeSpec);
 }
 
 bool Player::IsActionButtonDataValid(uint8 button, uint32 action, uint8 type)
 {
     if (button >= MAX_ACTION_BUTTONS)
     {
-        TC_LOG_ERROR("entities.player", "Action %u not added into button %u for player %s (GUID: %u): button must be < %u", action, button, GetName().c_str(), GetGUIDLow(), MAX_ACTION_BUTTONS );
+        TC_LOG_DEBUG("entities.player", "Action %u not added into button %u for player %s (GUID: %u): button must be < %u", action, button, GetName().c_str(), GetGUIDLow(), MAX_ACTION_BUTTONS );
         return false;
     }
 
     if (action >= MAX_ACTION_BUTTON_ACTION_VALUE)
     {
-        TC_LOG_ERROR("entities.player", "Action %u not added into button %u for player %s (GUID: %u): action must be < %u", action, button, GetName().c_str(), GetGUIDLow(), MAX_ACTION_BUTTON_ACTION_VALUE);
+        TC_LOG_DEBUG("entities.player", "Action %u not added into button %u for player %s (GUID: %u): action must be < %u", action, button, GetName().c_str(), GetGUIDLow(), MAX_ACTION_BUTTON_ACTION_VALUE);
         return false;
     }
 
@@ -6658,20 +6658,20 @@ bool Player::IsActionButtonDataValid(uint8 button, uint32 action, uint8 type)
         case ACTION_BUTTON_SPELL:
             if (!sSpellMgr->GetSpellInfo(action))
             {
-                TC_LOG_ERROR("entities.player", "Spell action %u not added into button %u for player %s (GUID: %u): spell not exist", action, button, GetName().c_str(), GetGUIDLow());
+                TC_LOG_DEBUG("entities.player", "Spell action %u not added into button %u for player %s (GUID: %u): spell not exist", action, button, GetName().c_str(), GetGUIDLow());
                 return false;
             }
 
             if (!HasSpell(action))
             {
-                TC_LOG_ERROR("entities.player", "Spell action %u not added into button %u for player %s (GUID: %u): player don't known this spell", action, button, GetName().c_str(), GetGUIDLow());
+                TC_LOG_DEBUG("entities.player", "Spell action %u not added into button %u for player %s (GUID: %u): player don't known this spell", action, button, GetName().c_str(), GetGUIDLow());
                 return false;
             }
             break;
         case ACTION_BUTTON_ITEM:
             if (!sObjectMgr->GetItemTemplate(action))
             {
-                TC_LOG_ERROR("entities.player", "Item action %u not added into button %u for player %s (GUID: %u): item not exist", action, button, GetName().c_str(), GetGUIDLow());
+                TC_LOG_DEBUG("entities.player", "Item action %u not added into button %u for player %s (GUID: %u): item not exist", action, button, GetName().c_str(), GetGUIDLow());
                 return false;
             }
             break;
@@ -6681,7 +6681,7 @@ bool Player::IsActionButtonDataValid(uint8 button, uint32 action, uint8 type)
         case ACTION_BUTTON_EQSET:
             break;
         default:
-            TC_LOG_ERROR("entities.player", "Unknown action type %u", type);
+            TC_LOG_DEBUG("entities.player", "Unknown action type %u", type);
             return false;                                          // other cases not checked at this moment
     }
 
@@ -6883,7 +6883,7 @@ void Player::CheckAreaExploreAndOutdoor()
                 GiveXP(XP, NULL);
                 SendExplorationExperience(area, XP);
             }
-            TC_LOG_INFO("entities.player", "Player %u discovered a new area: %u", GetGUIDLow(), area);
+            TC_LOG_DEBUG("entities.player", "Player %u discovered a new area: %u", GetGUIDLow(), area);
         }
     }
 }
@@ -7763,7 +7763,7 @@ void Player::_ApplyItemMods(Item* item, uint8 slot, bool apply)
     if (item->IsBroken())
         return;
 
-    TC_LOG_INFO("entities.player.items", "applying mods for item %u ", item->GetGUIDLow());
+    TC_LOG_DEBUG("entities.player.items", "applying mods for item %u ", item->GetGUIDLow());
 
     uint8 attacktype = Player::GetAttackBySlot(slot);
 
@@ -9774,7 +9774,7 @@ uint32 Player::GetXPRestBonus(uint32 xp)
 
     SetRestBonus(GetRestBonus() - rested_bonus);
 
-    TC_LOG_INFO("entities.player", "Player gain %u xp (+ %u Rested Bonus). Rested points=%f", xp+rested_bonus, rested_bonus, GetRestBonus());
+    TC_LOG_DEBUG("entities.player", "Player gain %u xp (+ %u Rested Bonus). Rested points=%f", xp+rested_bonus, rested_bonus, GetRestBonus());
     return rested_bonus;
 }
 
@@ -17999,7 +17999,7 @@ void Player::_LoadAuras(PreparedQueryResult result, uint32 timediff)
 
                 aura->SetLoadedState(maxduration, remaintime, remaincharges, stackcount, recalculatemask, &damage[0]);
                 aura->ApplyForTargets();
-                TC_LOG_INFO("entities.player", "Added aura spellid %u, effectmask %u", spellInfo->Id, effmask);
+                TC_LOG_DEBUG("entities.player", "Added aura spellid %u, effectmask %u", spellInfo->Id, effmask);
             }
         }
         while (result->NextRow());
@@ -20670,8 +20670,6 @@ void Player::PetSpellInitialize()
     if (!pet)
         return;
 
-    TC_LOG_DEBUG("entities.pet", "Pet Spells Groups");
-
     CharmInfo* charmInfo = pet->GetCharmInfo();
 
     WorldPacket data(SMSG_PET_SPELLS, 8+2+4+4+4*MAX_UNIT_ACTION_BAR_INDEX+1+1);
@@ -20681,6 +20679,8 @@ void Player::PetSpellInitialize()
     data << uint8(pet->GetReactState());
     data << uint8(charmInfo->GetCommandState());
     data << uint16(0); // Flags, mostly unknown
+
+    TC_LOG_DEBUG("entities.pet", "Player::PetspellInitialize: Creating spellgroups for summoned pet");
 
     // action bar loop
     charmInfo->BuildActionBar(&data);
@@ -22138,6 +22138,34 @@ void Player::SendCooldownEvent(SpellInfo const* spellInfo, uint32 itemId /*= 0*/
     data << uint32(spellInfo->Id);
     data << uint64(GetGUID());
     SendDirectMessage(&data);
+
+    uint32 cat = spellInfo->GetCategory();
+    if (cat && spellInfo->CategoryRecoveryTime)
+    {
+        SpellCategoryStore::const_iterator ct = sSpellsByCategoryStore.find(cat);
+        if (ct != sSpellsByCategoryStore.end())
+        {
+            SpellCategorySet const& catSet = ct->second;
+            for (SpellCooldowns::const_iterator i = m_spellCooldowns.begin(); i != m_spellCooldowns.end(); ++i)
+            {
+                if (i->first == spellInfo->Id) // skip main spell, already handled above
+                    continue;
+
+                SpellInfo const* spellInfo2 = sSpellMgr->GetSpellInfo(i->first);
+                if (!spellInfo2 || !spellInfo2->IsCooldownStartedOnEvent())
+                    continue;
+
+                if (catSet.find(i->first) != catSet.end())
+                {
+                    // Send activate cooldown timer (possible 0) at client side
+                    WorldPacket data(SMSG_COOLDOWN_EVENT, 4 + 8);
+                    data << uint32(i->first);
+                    data << uint64(GetGUID());
+                    SendDirectMessage(&data);
+                }
+            }
+        }
+    }
 }
 
 void Player::UpdatePotionCooldown(Spell* spell)
@@ -22532,13 +22560,13 @@ bool Player::IsVisibleGloballyFor(Player const* u) const
 }
 
 template<class T>
-inline void UpdateVisibilityOf_helper(GuidSet& s64, T* target, std::set<Unit*>& /*v*/)
+inline void UpdateVisibilityOf_helper(GuidUnorderedSet& s64, T* target, std::set<Unit*>& /*v*/)
 {
     s64.insert(target->GetGUID());
 }
 
 template<>
-inline void UpdateVisibilityOf_helper(GuidSet& s64, GameObject* target, std::set<Unit*>& /*v*/)
+inline void UpdateVisibilityOf_helper(GuidUnorderedSet& s64, GameObject* target, std::set<Unit*>& /*v*/)
 {
     // @HACK: This is to prevent objects like deeprun tram from disappearing when player moves far from its spawn point while riding it
     if ((target->GetGOInfo()->type != GAMEOBJECT_TYPE_TRANSPORT))
@@ -22546,14 +22574,14 @@ inline void UpdateVisibilityOf_helper(GuidSet& s64, GameObject* target, std::set
 }
 
 template<>
-inline void UpdateVisibilityOf_helper(GuidSet& s64, Creature* target, std::set<Unit*>& v)
+inline void UpdateVisibilityOf_helper(GuidUnorderedSet& s64, Creature* target, std::set<Unit*>& v)
 {
     s64.insert(target->GetGUID());
     v.insert(target);
 }
 
 template<>
-inline void UpdateVisibilityOf_helper(GuidSet& s64, Player* target, std::set<Unit*>& v)
+inline void UpdateVisibilityOf_helper(GuidUnorderedSet& s64, Player* target, std::set<Unit*>& v)
 {
     s64.insert(target->GetGUID());
     v.insert(target);
@@ -22615,7 +22643,7 @@ void Player::UpdateTriggerVisibility()
 
     UpdateData udata;
     WorldPacket packet;
-    for (GuidSet::iterator itr = m_clientGUIDs.begin(); itr != m_clientGUIDs.end(); ++itr)
+    for (auto itr = m_clientGUIDs.begin(); itr != m_clientGUIDs.end(); ++itr)
     {
         if (itr->IsCreature())
         {
@@ -23674,7 +23702,7 @@ void Player::UpdateForQuestWorldObjects()
 
     UpdateData udata;
     WorldPacket packet;
-    for (GuidSet::iterator itr = m_clientGUIDs.begin(); itr != m_clientGUIDs.end(); ++itr)
+    for (auto itr = m_clientGUIDs.begin(); itr != m_clientGUIDs.end(); ++itr)
     {
         if (itr->IsGameObject())
         {
@@ -25433,7 +25461,7 @@ void Player::LearnTalent(uint32 talentId, uint32 talentRank)
     LearnSpell(spellid, false);
     AddTalent(spellid, m_activeSpec, true);
 
-    TC_LOG_INFO("entities.player", "TalentID: %u Rank: %u Spell: %u Spec: %u\n", talentId, talentRank, spellid, m_activeSpec);
+    TC_LOG_DEBUG("entities.player", "TalentID: %u Rank: %u Spell: %u Spec: %u\n", talentId, talentRank, spellid, m_activeSpec);
 
     // update free talent points
     SetFreeTalentPoints(CurTalentPoints - (talentRank - curtalent_maxrank + 1));
@@ -25568,7 +25596,7 @@ void Player::LearnPetTalent(ObjectGuid petGuid, uint32 talentId, uint32 talentRa
 
     // learn! (other talent ranks will unlearned at learning)
     pet->learnSpell(spellid);
-    TC_LOG_INFO("entities.player", "PetTalentID: %u Rank: %u Spell: %u\n", talentId, talentRank, spellid);
+    TC_LOG_DEBUG("entities.player", "PetTalentID: %u Rank: %u Spell: %u\n", talentId, talentRank, spellid);
 
     // update free talent points
     pet->SetFreeTalentPoints(CurTalentPoints - (talentRank - curtalent_maxrank + 1));
